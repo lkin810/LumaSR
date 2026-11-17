@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LumaSR {{VERSION}} · 下载</title>
+<style>
+  :root{color-scheme:dark;--bg:#080b12;--card:rgba(20,26,38,.86);--line:rgba(255,255,255,.08);--text:#eef3ff;--muted:#96a3ba;--a:#7aa2ff;--b:#9b7bff}
+  *{box-sizing:border-box}
+  body{margin:0;min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;color:var(--text);background:radial-gradient(900px 520px at 18% -10%,rgba(122,162,255,.22),transparent 65%),radial-gradient(800px 480px at 100% 0%,rgba(155,123,255,.18),transparent 60%),var(--bg);display:flex;align-items:center;justify-content:center;padding:28px 18px}
+  .wrap{width:100%;max-width:720px}
+  .badge{display:inline-flex;align-items:center;gap:8px;padding:7px 12px;border:1px solid var(--line);border-radius:999px;background:rgba(255,255,255,.03);color:var(--muted);font-size:12px}
+  .dot{width:7px;height:7px;border-radius:50%;background:#57d38c;box-shadow:0 0 12px #57d38c}
+  h1{margin:18px 0 8px;font-size:clamp(30px,6vw,46px);letter-spacing:-.03em}
+  h1 span{background:linear-gradient(100deg,var(--a),var(--b));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .lead{margin:0;color:var(--muted);font-size:15px;line-height:1.7}
+  .card{margin-top:24px;padding:22px;border:1px solid var(--line);border-radius:24px;background:var(--card);backdrop-filter:blur(16px);box-shadow:0 24px 80px rgba(0,0,0,.38)}
+  .meta{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
+  .pill{padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.05);color:var(--muted);font-size:12px}
+  .download{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:17px 20px;border:none;border-radius:16px;background:linear-gradient(100deg,#6f95ff,#9c78ff);color:#fff;font-size:17px;font-weight:700;text-decoration:none;box-shadow:0 12px 34px rgba(122,162,255,.3)}
+  .download:active{transform:translateY(1px)}
+  .hint{margin:14px 0 0;color:var(--muted);font-size:12px;line-height:1.7}
+  h2{margin:26px 0 12px;font-size:15px}
+  ul{margin:0;padding-left:18px;color:var(--muted);font-size:13px;line-height:1.9}
+  code{display:block;margin-top:12px;padding:11px 12px;border:1px solid var(--line);border-radius:12px;background:rgba(0,0,0,.28);color:#b8c7e6;font-size:11px;word-break:break-all}
+  footer{margin-top:20px;color:#65718a;font-size:11px;text-align:center}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <div class="badge"><span class="dot"></span> Release · {{VERSION}}</div>
+  <h1>LumaSR <span>文件夹批处理</span></h1>
+  <p class="lead">Android 本地超分：递归整个文件夹，保留目录结构，跳过已处理，输出到 <b>LumaSR_Output</b>。</p>
+
+  <section class="card">
+    <div class="meta">
+      <span class="pill">{{SIZE_MB}} MB</span>
+      <span class="pill">arm64-v8a</span>
+      <span class="pill">Android 10+</span>
+      <span class="pill">Vulkan + Qualcomm NPU</span>
+      <span class="pill">{{UPDATED}}</span>
+    </div>
+    <a class="download" href="./{{FILENAME}}" download>
+      <span>下载 {{FILENAME}}</span><span>↓</span>
+    </a>
+    <p class="hint">安装前请允许「安装未知应用」。NPU 首次使用需在设备上编译模型，约 1 分钟；失败会自动回退 Vulkan。</p>
+    <code>SHA-256: {{SHA256}}</code>
+  </section>
+
+  <h2>当前能力</h2>
+  <ul>
+    <li>SAF 选文件夹，递归扫描，网格筛选 / 全选 / 反选。</li>
+    <li>统一参数批处理，输出到 <b>源文件夹/LumaSR_Output</b>，可保留子目录。</li>
+    <li>输出清单记录源到结果的映射，平铺重名、换格式、续跑判断更准确。</li>
+    <li>任务页支持暂停 / 继续 / 失败重试；对比页支持上一张 / 下一张。</li>
+    <li>NPU 默认按设备启用，设置页提供 HTP / QNN / FP16 / 页大小自检。</li>
+    <li>NPU 初始化失败自动回退 Vulkan；任务页显示实际后端与原因。</li>
+    <li>处理性能可选 tile 128 / 192 / 256；进度回调已节流。</li>
+  </ul>
+
+  <footer>LumaSR · 本地处理，不上传图片</footer>
+</main>
+</body>
+</html>

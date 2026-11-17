@@ -1,0 +1,52 @@
+LumaSR
+Copyright 2026 LumaSR contributors
+
+This product is based on, and redistributes components from, the following
+projects and model authors. Original copyright and license notices are
+retained.
+
+--------------------------------------------------------------------------
+Mihon Upscale (mihon_img_upscale) v1.3.23
+https://github.com/HaoweiLi97/mihon_img_upscale
+Copyright HaoweiLi97 and contributors
+Licensed under the Apache License, Version 2.0.
+
+  The upscaling engine integration (engine97), the prebuilt
+  libwaifu2x-jni.so, the Qualcomm QNN/NPU backend sources, the HTP runtime
+  libraries and the bundled model assets originate from this project.
+
+Mihon / Tachiyomi
+https://github.com/mihonapp/mihon
+Licensed under the Apache License, Version 2.0.
+
+  The engine97 Kotlin packages keep the original eu.kanade.tachiyomi.util.*
+  namespaces because JNI methods are statically registered.
+
+--------------------------------------------------------------------------
+Models and native libraries
+
+  NCNN                      BSD-3-Clause, Copyright (c) 2017 Tencent
+  Real-ESRGAN / Real-ESRNet BSD-3-Clause, Copyright (c) 2021 Xintao Wang
+  Real-CUGAN                MIT, Copyright (c) 2021 nihui
+  Waifu2x                   MIT, Copyright (c) 2017 nagadomi
+  W2xEX / AnimeJaNai / sudo / SPAN
+                            Distributed under their respective author and
+                            OpenModelDB licenses.
+
+  Qualcomm QNN runtime libraries (libQnn*.so) are distributed under
+  Qualcomm's license, as bundled with the upstream project / official APK.
+
+--------------------------------------------------------------------------
+Modifications in this repository
+
+  LumaSR is a separate Android application built on top of the engine above.
+  It replaces the original UI with Jetpack Compose and adds:
+
+  - folder-first batch workflow (SAF tree selection, recursive scan,
+    grid selection, predictable output folder)
+  - Vulkan GPU and Qualcomm NPU backend switching with diagnostics
+  - model comparison lab (multi-model timing and output comparison)
+  - persistent per-stage performance logging
+  - output index for resumable batch runs
+
+  See the git history and docs/ for details.
