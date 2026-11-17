@@ -5,7 +5,6 @@ import android.graphics.Bitmap
 import android.graphics.ImageDecoder
 import android.net.Uri
 import android.util.Log
-import java.io.File
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
@@ -34,13 +33,6 @@ object ImageLoader {
         outputScale: Int,
         maxOutputPixels: Long,
     ): Loaded = decode(ImageDecoder.createSource(context.contentResolver, uri), outputScale, maxOutputPixels)
-
-    suspend fun decodeFile(
-        context: Context,
-        file: File,
-        outputScale: Int,
-        maxOutputPixels: Long,
-    ): Loaded = decode(ImageDecoder.createSource(file), outputScale, maxOutputPixels)
 
     private fun decode(
         source: ImageDecoder.Source,
