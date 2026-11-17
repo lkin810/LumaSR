@@ -23,22 +23,36 @@
 
 ## 当前状态
 
-- `:app` 与 `:engine97` 编译通过，Release APK 已产出（0.4.0-lab，约 223 MB）
+- `:app` 与 `:engine97` 编译通过，Release APK 已产出（0.4.3-lab，约 223 MB）
 - 引擎为 97 官方 APK 的预编译 `libwaifu2x-jni.so` + QNN 运行时 + DLC 资产
 - UI v2（文件夹批处理）与 v0.4 实验室已完成，设计稿见 [docs/ui-v2.html](docs/ui-v2.html)
-- NPU 14001（FastRPC 未声明）已在 0.3.3 修复，待 0.4.0 真机回归
+- NPU 14001（FastRPC 未声明）已在 0.3.3 修复，0.4.x 在 SM8750 真机验证通过
 - 首测建议：设置 → NPU 诊断 → 运行自检；通过后再用「模型对比测试」跑一张图
 
-## 设备要求
+## 设备与 NPU 支持
 
 - Android 10+（minSdk 29）
 - arm64-v8a
 - GPU：支持 Vulkan 的 Adreno / Mali
-- NPU：Qualcomm Snapdragon（QNN 运行时覆盖 HTP v69/v73/v75/v79/v81）
-- 骁龙 8 至尊版（SM8750）对应 HTP v79
+- NPU：Qualcomm Snapdragon，设备 HTP 架构需为 **v69 / v73 / v75 / v79 / v81** 之一
+  （APK 已内置对应 `libQnnHtpV*Skel.so`）
+- 精度：FP16；Real-ESRGAN Anime 2x 另有 INT8 版本
+- Android 12+ 通过 FastRPC 访问 Hexagon，manifest 已声明
+  `libcdsprpc.so` / `libadsprpc.so`
+
+支持 NPU 的模型（未列出的模型自动使用 Vulkan）：
+
+- Real-CUGAN SE 2x（noise 0/1/2/3/保守全档）
+- Real-CUGAN Pro 2x / 3x
+- Real-ESRGAN Anime 2x、Real-ESRGAN Photo 2x
+- W2xEX Photo Small 2x
+- SPAN NomosUni Photo 2x
 
 > NPU 模型首次使用会在设备上把 DLC 编译成 HTP context，可能需要几十秒，
 > 之后缓存在应用私有目录。NPU 初始化失败会自动回退 Vulkan，并在任务页显示原因。
+
+实测设备：HONOR AAK-AN00（SM8750 / HTP v79 / Android 17）。这只是验证用机，
+不代表只支持该机型；其他 HTP 版本未逐一实测。
 
 ## 模型
 
