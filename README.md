@@ -1,17 +1,17 @@
 # LumaSR · 光影超分
 
 基于 [HaoweiLi97/mihon_img_upscale](https://github.com/HaoweiLi97/mihon_img_upscale)（Mihon Upscale v1.3.23）的图像增强引擎，
-重做的**独立本地图片超分 App**。引擎使用 97 的 **NCNN Vulkan GPU + Qualcomm QNN NPU**
-双后端，UI 采用**文件夹优先**的批处理流程。
+重做的**独立本地图片超分 App**。支持 GPU 和高通骁龙 NPU 两种加速方式，
+界面采用**文件夹优先**的批处理流程。
 
 ## 特性
 
-- **文件夹优先批量**：SAF 选目录 → 递归扫描 → 网格筛选/全选/反选 → 一套参数 → 后台处理
+- **文件夹优先批量**：选择文件夹 → 自动递归扫描 → 网格筛选/全选/反选 → 统一参数 → 后台处理
 - **可预测的输出**：自动写入 `源文件夹/LumaSR_Output`，可选保留子目录结构，支持跳过已处理
-- **双后端**：Vulkan GPU（全模型）与 Qualcomm Hexagon NPU（QNN/HTP，FP16，Anime 支持 INT8）
+- **两种加速方式**：GPU 支持全部模型；骁龙 NPU 支持部分模型，速度更快、更省电
 - **12 个模型家族、30+ 变体**：Real-CUGAN SE/Pro/Nose、Real-ESRGAN、Waifu2x、
   W2xEX、AnimeJaNai、sudo、SPAN NomosUni
-- **NPU 覆盖 15 个 FP16 变体**：Real-CUGAN SE 2x 五档、Pro 2x/3x 三档、
+- **部分模型支持 NPU**：Real-CUGAN SE 2x 五档、Pro 2x/3x 三档、
   Real-ESRGAN 2x、W2xEX Photo Small 2x、SPAN NomosUni 2x
 - **单图工作流**：选图 → 模型/倍数/降噪/后端/精度 → 推理 → 拖动对比 → 保存到相册
 - **任务与结果**：总进度、当前文件、逐项状态、暂停/继续/重试失败、结果预览
@@ -24,35 +24,41 @@
 ## 当前状态
 
 - `:app` 与 `:engine97` 编译通过，Release APK 已产出（0.4.3-lab，约 223 MB）
-- 引擎为 97 官方 APK 的预编译 `libwaifu2x-jni.so` + QNN 运行时 + DLC 资产
+- 引擎、模型和预编译库来自 Mihon Upscale 97，已全部打包进 APK
 - UI v2（文件夹批处理）与 v0.4 实验室已完成，设计稿见 [docs/ui-v2.html](docs/ui-v2.html)
-- NPU 14001（FastRPC 未声明）已在 0.3.3 修复，0.4.x 在 SM8750 真机验证通过
+- NPU 已在真机验证通过（HONOR AAK-AN00），之前不可用的问题已修复
 - 首测建议：设置 → NPU 诊断 → 运行自检；通过后再用「模型对比测试」跑一张图
 
-## 设备与 NPU 支持
+## 哪些设备能用
 
-- Android 10+（minSdk 29）
-- arm64-v8a
+- Android 10 及以上
+- 64 位 ARM 手机（arm64-v8a）
 - GPU：支持 Vulkan 的 Adreno / Mali
-- NPU：Qualcomm Snapdragon，设备 HTP 架构需为 **v69 / v73 / v75 / v79 / v81** 之一
-  （APK 已内置对应 `libQnnHtpV*Skel.so`）
-- 精度：FP16；Real-ESRGAN Anime 2x 另有 INT8 版本
-- Android 12+ 通过 FastRPC 访问 Hexagon，manifest 已声明
-  `libcdsprpc.so` / `libadsprpc.so`
+- NPU（可选）：高通骁龙 8 系；没有 NPU 也能用 GPU 正常跑
 
-支持 NPU 的模型（未列出的模型自动使用 Vulkan）：
+### NPU 支持范围
 
-- Real-CUGAN SE 2x（noise 0/1/2/3/保守全档）
+| 骁龙芯片 | 大致对应 |
+|---|---|
+| 骁龙 8 Gen 1 / 8+ Gen 1 | 2021–2022 年旗舰 |
+| 骁龙 8 Gen 2 | 2022–2023 年旗舰 |
+| 骁龙 8 Gen 3 | 2023–2024 年旗舰 |
+| 骁龙 8 至尊版 | 2024–2025 年旗舰 |
+| 第五代骁龙 8 至尊版 | 2025–2026 年旗舰 |
+
+- 更早的骁龙 888 和 7 系不在支持范围
+- 同款芯片也可能因厂商限制无法访问 NPU，目前只在 HONOR AAK-AN00
+  （骁龙 8 至尊版）实测通过
+- 首次使用 NPU 会编译模型，需要等几十秒，之后会缓存
+- NPU 不可用时会自动改用 GPU，并在任务页说明原因
+
+支持 NPU 的模型（其他模型只能用 GPU，不影响正常使用）：
+
+- Real-CUGAN SE 2x（全部降噪档位）
 - Real-CUGAN Pro 2x / 3x
-- Real-ESRGAN Anime 2x、Real-ESRGAN Photo 2x
+- Real-ESRGAN 动漫 2x、照片 2x
 - W2xEX Photo Small 2x
 - SPAN NomosUni Photo 2x
-
-> NPU 模型首次使用会在设备上把 DLC 编译成 HTP context，可能需要几十秒，
-> 之后缓存在应用私有目录。NPU 初始化失败会自动回退 Vulkan，并在任务页显示原因。
-
-实测设备：HONOR AAK-AN00（SM8750 / HTP v79 / Android 17）。这只是验证用机，
-不代表只支持该机型；其他 HTP 版本未逐一实测。
 
 ## 模型
 
@@ -135,14 +141,14 @@ LumaSR/
 
 ## 已知限制
 
-- 真机验证覆盖 HONOR AAK-AN00（SM8750 / HTP v79 / Android 17），其他机型未测
-- APK 约 223 MB：QNN HTP Prepare 79 MB + 5 个 HTP skel 约 90 MB + 模型
-- QNN 的 `libQnnHtpV*Skel.so` 是 4 KB page 对齐（与官方 APK 一致），16 KB page 设备可能无法加载
-- 未包含 MediaTek NPU 后端（LiteRT），只做 Snapdragon NPU
-- NPU 模型以 FP16 为主，仅 Real-ESRGAN Anime 2x 有 INT8
+- 只在 HONOR AAK-AN00（骁龙 8 至尊版）真机验证过，其他机型未测
+- APK 约 223 MB，体积主要来自 NPU 运行时和模型
+- 个别采用 16 KB 内存页的新设备可能无法加载 NPU 组件
+- 只支持高通骁龙 NPU，不支持联发科
+- NPU 模型以 FP16 为主，只有一个 INT8 版本
 - 批量任务只支持文件夹入口，所有图片共用一套参数
-- 输出使用 SAF `DocumentFile` 写入，个别文件管理器对目录 Uri 的“打开”支持有限
-- “跳过已处理”按 `输出文件夹/相对路径.格式` 判断同名文件
+- 部分文件管理器不支持直接打开输出目录
+- “跳过已处理”按“输出文件夹/相对路径.格式”判断同名文件
 
 ## 许可与致谢
 
