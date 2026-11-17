@@ -4,15 +4,13 @@
 重做的**独立本地图片超分 App**。支持 GPU 和高通骁龙 NPU 两种加速方式，
 界面采用**文件夹优先**的批处理流程。
 
-## 特性
+## 功能
 
 - **文件夹优先批量**：选择文件夹 → 自动递归扫描 → 网格筛选/全选/反选 → 统一参数 → 后台处理
 - **可预测的输出**：自动写入 `源文件夹/LumaSR_Output`，可选保留子目录结构，支持跳过已处理
 - **两种加速方式**：GPU 支持全部模型；骁龙 NPU 支持部分模型，速度更快、更省电
 - **12 个模型家族、30+ 变体**：Real-CUGAN SE/Pro/Nose、Real-ESRGAN、Waifu2x、
   W2xEX、AnimeJaNai、sudo、SPAN NomosUni
-- **部分模型支持 NPU**：Real-CUGAN SE 2x 五档、Pro 2x/3x 三档、
-  Real-ESRGAN 2x、W2xEX Photo Small 2x、SPAN NomosUni 2x
 - **单图工作流**：选图 → 模型/倍数/降噪/后端/精度 → 推理 → 拖动对比 → 保存到相册
 - **任务与结果**：总进度、当前文件、逐项状态、暂停/继续/重试失败、结果预览
 - **连续对比**：批量结果可上一张/下一张，滑杆、双指缩放、1:1、切换原图
@@ -20,14 +18,6 @@
 - **实验室**：模型对比测试（同一张图跑多个模型/后端，输出 `LumaSR_Test` + CSV）与模型说明页
 - **大图保护**：按最大输出像素自动降采样输入
 - **完全离线**：所有模型打包进 APK，不依赖运行时下载
-
-## 当前状态
-
-- `:app` 与 `:engine97` 编译通过，Release APK 已产出（0.4.3-lab，约 223 MB）
-- 引擎、模型和预编译库来自 Mihon Upscale 97，已全部打包进 APK
-- UI v2（文件夹批处理）与 v0.4 实验室已完成，设计稿见 [docs/ui-v2.html](docs/ui-v2.html)
-- NPU 已在真机验证通过（HONOR AAK-AN00），之前不可用的问题已修复
-- 首测建议：设置 → NPU 诊断 → 运行自检；通过后再用「模型对比测试」跑一张图
 
 ## 哪些设备能用
 
@@ -47,8 +37,7 @@
 | 第五代骁龙 8 至尊版 | 2025–2026 年旗舰 |
 
 - 更早的骁龙 888 和 7 系不在支持范围
-- 同款芯片也可能因厂商限制无法访问 NPU，目前只在 HONOR AAK-AN00
-  （骁龙 8 至尊版）实测通过
+- 同款芯片也可能因厂商限制无法访问 NPU，需要在自己的手机上实测确认
 - 首次使用 NPU 会编译模型，需要等几十秒，之后会缓存
 - NPU 不可用时会自动改用 GPU，并在任务页说明原因
 
@@ -84,15 +73,14 @@
 常用命令：
 
 ```bash
-scripts/build.sh     # 增量 Release：自动找 JDK 17，产物复制到 dist/ 并输出 SHA
-scripts/deploy.sh    # 自动增量构建，然后生成下载页、部署、校验 URL
-scripts/verify.sh    # 只校验线上页面和 APK 是否与 dist/ 一致
-scripts/package-source.sh  # 打包完整源码 + 交接文档，生成 dist/*-source.zip
+scripts/build.sh            # 增量 Release：产物复制到 dist/ 并生成 SHA-256
+scripts/package-source.sh   # 打包源码 + 文档
+scripts/deploy.sh           # 作者自用：生成下载页并部署（需自备部署环境）
+scripts/verify.sh           # 作者自用：校验线上文件与本地产物一致
 ```
 
-脚本不会 `clean`；Gradle 配置缓存、构建缓存、`lint` 关闭都已开好，改几行 Kotlin 后增量构建通常几十秒。
-`deploy.sh` 会自动把版本、大小、SHA-256 填进 `scripts/download-page.html`，不需要手改 hash。
-`deploy.sh` 需要 Trae 部署插件和已登录环境；只想本地出包时用 `build.sh` 即可。
+脚本不会 `clean`；已开启 Gradle 配置缓存和构建缓存，改几行 Kotlin 后增量构建通常几十秒。
+`deploy.sh` / `verify.sh` 依赖 Trae 部署插件，只在本机出包时用 `build.sh` 即可。
 
 手动构建：
 
@@ -141,7 +129,7 @@ LumaSR/
 
 ## 已知限制
 
-- 只在 HONOR AAK-AN00（骁龙 8 至尊版）真机验证过，其他机型未测
+- 只在骁龙 8 至尊版机型上验证过，其他芯片未测
 - APK 约 223 MB，体积主要来自 NPU 运行时和模型
 - 个别采用 16 KB 内存页的新设备可能无法加载 NPU 组件
 - 只支持高通骁龙 NPU，不支持联发科
