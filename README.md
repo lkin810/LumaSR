@@ -75,12 +75,9 @@
 ```bash
 scripts/build.sh            # 增量 Release：产物复制到 dist/ 并生成 SHA-256
 scripts/package-source.sh   # 打包源码 + 文档
-scripts/deploy.sh           # 作者自用：生成下载页并部署（需自备部署环境）
-scripts/verify.sh           # 作者自用：校验线上文件与本地产物一致
 ```
 
 脚本不会 `clean`；已开启 Gradle 配置缓存和构建缓存，改几行 Kotlin 后增量构建通常几十秒。
-`deploy.sh` / `verify.sh` 依赖 Trae 部署插件，只在本机出包时用 `build.sh` 即可。
 
 手动构建：
 
@@ -122,7 +119,7 @@ LumaSR/
 │   ├── src/main/jniLibs/arm64-v8a/
 │   ├── src/main/assets/          # ncnn 模型 + qnn-models DLC
 │   └── src/main/java/eu/kanade/tachiyomi/util/...
-├── scripts/                      # build.sh / deploy.sh / verify.sh / 下载页模板
+├── scripts/                      # build.sh / package-source.sh
 ├── dist/                         # 构建产物与 SHA-256（已 gitignore）
 └── docs/
 ```
