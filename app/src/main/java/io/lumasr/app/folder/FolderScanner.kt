@@ -3,6 +3,7 @@ package io.lumasr.app.folder
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Build
 import android.provider.DocumentsContract
@@ -82,7 +83,9 @@ object FolderScanner {
                 context, treeUri, rootChildren, "", recursive, outputFolderName, images, onCount,
             )
         } else {
-            walkDocumentFile(rootDocument, "", recursive, outputFolderName, images, onCount)
+            walkDocumentFile(
+                context, rootDocument, "", recursive, outputFolderName, images, onCount,
+            )
         }
 
         val outputFiles = mutableSetOf<String>()
@@ -160,11 +163,9 @@ object FolderScanner {
         format: SaveFormat,
     ): Boolean {
         val record = records[image.relativePath]
-        if (record != null &&
-            record.format == format.name &&
-            record.outputPath in outputFiles
-        ) {
-            return true
+        if (record != null && record.outputPath in outputFiles) {
+            if (record.copied) return true
+            if (record.format == format.name) return true
         }
         if (!preserveStructure && records.isNotEmpty()) return false
         return expectedOutputPath(image, preserveStructure, format) in outputFiles
@@ -198,15 +199,17 @@ object FolderScanner {
                 )
             } else {
                 if (!isImage(child.name, child.mimeType)) continue
+                val uri = DocumentsContract.buildDocumentUriUsingTree(treeUri, child.docId)
+                val (width, height) = readDimensions(context, uri)
                 out.add(
                     FolderImage(
-                        documentUri = DocumentsContract.buildDocumentUriUsingTree(
-                            treeUri, child.docId,
-                        ),
+                        documentUri = uri,
                         name = child.name,
                         relativePath = "$prefix${child.name}",
                         sizeBytes = child.size,
                         mimeType = child.mimeType,
+                        width = width,
+                        height = height,
                     ),
                 )
                 if (out.size % 25 == 0) onCount(out.size)
@@ -215,6 +218,7 @@ object FolderScanner {
     }
 
     private suspend fun walkDocumentFile(
+        context: Context,
         dir: DocumentFile,
         prefix: String,
         recursive: Boolean,
@@ -233,8 +237,11 @@ object FolderScanner {
                 ) {
                     continue
                 }
-                walkDocumentFile(child, "$prefix$name/", true, outputFolderName, out, onCount)
+                walkDocumentFile(
+                    context, child, "$prefix$name/", true, outputFolderName, out, onCount,
+                )
             } else if (isImage(name, child.type)) {
+                val (width, height) = readDimensions(context, child.uri)
                 out.add(
                     FolderImage(
                         documentUri = child.uri,
@@ -242,6 +249,8 @@ object FolderScanner {
                         relativePath = "$prefix$name",
                         sizeBytes = child.length(),
                         mimeType = child.type,
+                        width = width,
+                        height = height,
                     ),
                 )
                 if (out.size % 25 == 0) onCount(out.size)
@@ -339,6 +348,15 @@ object FolderScanner {
         return name.substringAfterLast('.', "").lowercase() in IMAGE_EXTENSIONS
     }
 
+    /** Reads intrinsic size from the header; no pixels are decoded. */
+    private fun readDimensions(context: Context, uri: Uri): Pair<Int, Int> = runCatching {
+        val options = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        context.contentResolver.openInputStream(uri)?.use {
+            BitmapFactory.decodeStream(it, null, options)
+        }
+        options.outWidth to options.outHeight
+    }.getOrDefault(0 to 0)
+
     fun expectedOutputPath(
         image: FolderImage,
         preserveStructure: Boolean,
@@ -366,6 +384,29 @@ object FolderScanner {
             } else {
                 "$dir/${base}_$index.${format.ext}"
             }
+            index++
+        }
+        used.add(candidate)
+        return candidate
+    }
+
+    /** Collision-free path that keeps the original file name and extension. */
+    fun uniqueCopyOutputPath(
+        image: FolderImage,
+        preserveStructure: Boolean,
+        used: MutableSet<String>,
+    ): String {
+        val ext = image.name.substringAfterLast('.', "").lowercase().ifBlank { "img" }
+        val base = image.name.substringBeforeLast('.', image.name)
+        val dir = if (preserveStructure) image.relativePath.substringBeforeLast('/', "") else ""
+        fun path(suffix: String): String {
+            val name = if (suffix.isEmpty()) "$base.$ext" else "${base}_$suffix.$ext"
+            return if (dir.isEmpty()) name else "$dir/$name"
+        }
+        var candidate = path("")
+        var index = 2
+        while (candidate in used) {
+            candidate = path(index.toString())
             index++
         }
         used.add(candidate)
@@ -439,6 +480,44 @@ object FolderScanner {
                 return null
             }
             return doc.uri
+        }
+
+        fun copy(relativePath: String, sourceUri: Uri): Uri? {
+            val parentPath = relativePath.substringBeforeLast('/', "")
+            val fileName = relativePath.substringAfterLast('/')
+            val parent = resolveDir(parentPath) ?: return null
+            val mime = context.contentResolver.getType(sourceUri) ?: mimeForName(fileName)
+
+            parent.findFile(fileName)?.let { runCatching { it.delete() } }
+            val doc = runCatching { parent.createFile(mime, fileName) }.getOrNull() ?: return null
+            val ok = runCatching {
+                val input = context.contentResolver.openInputStream(sourceUri)
+                    ?: return@runCatching false
+                input.use { source ->
+                    val output = context.contentResolver.openOutputStream(doc.uri, "wt")
+                        ?: return@runCatching false
+                    output.use { target -> source.copyTo(target) }
+                }
+                true
+            }.getOrDefault(false)
+
+            if (!ok) {
+                runCatching { doc.delete() }
+                return null
+            }
+            return doc.uri
+        }
+
+        private fun mimeForName(name: String): String = when (name.substringAfterLast('.').lowercase()) {
+            "jpg", "jpeg" -> "image/jpeg"
+            "png" -> "image/png"
+            "webp" -> "image/webp"
+            "gif" -> "image/gif"
+            "bmp" -> "image/bmp"
+            "heic", "heif" -> "image/heic"
+            "avif" -> "image/avif"
+            "tif", "tiff" -> "image/tiff"
+            else -> "application/octet-stream"
         }
 
         fun writeText(relativePath: String, text: String): Uri? {

@@ -192,6 +192,7 @@ fun GridSelectScreen(vm: AppViewModel) {
                         image = image,
                         processed = vm.isProcessed(image),
                         selected = image.relativePath in selected,
+                        copy = vm.willCopy(image) && !vm.isProcessed(image),
                         onClick = { vm.toggleImage(image) },
                     )
                 }
@@ -205,6 +206,7 @@ private fun ThumbCell(
     image: FolderImage,
     processed: Boolean,
     selected: Boolean,
+    copy: Boolean,
     onClick: () -> Unit,
 ) {
     val borderColor = if (selected) {
@@ -267,6 +269,27 @@ private fun ThumbCell(
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.onPrimary,
                     modifier = Modifier.size(13.dp),
+                )
+            }
+        }
+
+        if (copy) {
+            Surface(
+                shape = RoundedCornerShape(6.dp),
+                color = Color.Black.copy(alpha = 0.6f),
+                border = BorderStroke(
+                    1.dp,
+                    MaterialTheme.colorScheme.tertiary.copy(alpha = 0.5f),
+                ),
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(5.dp),
+            ) {
+                Text(
+                    "复制",
+                    fontSize = 8.sp,
+                    color = MaterialTheme.colorScheme.tertiary,
+                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp),
                 )
             }
         }

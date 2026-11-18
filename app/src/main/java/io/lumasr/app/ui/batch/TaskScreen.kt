@@ -115,7 +115,9 @@ fun TaskScreen(vm: AppViewModel, state: QueueState?) {
             return@Scaffold
         }
 
-        val doneItems = state.items.filter { it.status == QueueStatus.DONE && it.outputUri != null }
+        val doneItems = state.items.filter {
+            it.status == QueueStatus.DONE && it.outputUri != null && !it.copyOnly
+        }
         val current = state.items.firstOrNull { it.status == QueueStatus.RUNNING }
 
         LazyColumn(
@@ -451,7 +453,7 @@ private fun TaskItemRow(item: QueueItem) {
                 Text(
                     when (item.status) {
                         QueueStatus.DONE -> buildString {
-                            append("已完成")
+                            append(if (item.copyOnly) "已复制（跳过超分）" else "已完成")
                             if (item.elapsedMs > 0) append(" · ${item.elapsedMs / 1000.0}s")
                         }
                         QueueStatus.FAILED -> item.error ?: "失败"

@@ -146,11 +146,13 @@ object PerfLog {
                     "${image.outputWidth}x${image.outputHeight}" +
                     if (image.downscaled) " (已降采样)" else "",
             )
+            val copyNote = if (image.copied) " · 直接复制" else ""
+            val sizeNote = if (image.outputBytes > 0) " · ${image.outputBytes / 1024}KB" else ""
             appendLine(
                 "   ${image.status} 解码 ${image.decodeMs}ms · " +
                     "推理 ${image.inferMs}ms · 编码 ${image.encodeMs}ms · " +
                     "等待 ${image.waitMs}ms · 总计 ${image.totalMs}ms" +
-                    if (image.outputBytes > 0) " · ${image.outputBytes / 1024}KB" else "",
+                    copyNote + sizeNote,
             )
             image.error?.let { appendLine("   错误: $it") }
         }

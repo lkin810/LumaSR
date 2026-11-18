@@ -315,6 +315,48 @@ fun BatchConfigScreen(vm: AppViewModel) {
             }
 
             Spacer(Modifier.height(16.dp))
+            Section("跳过超分")
+            Surface(
+                shape = RoundedCornerShape(18.dp),
+                color = MaterialTheme.colorScheme.surface,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Column(Modifier.padding(14.dp)) {
+                    Text(
+                        "长边达到所选值时，不放大，直接复制原图",
+                        fontSize = 11.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        listOf(
+                            0 to "关闭",
+                            1920 to "1080p",
+                            2560 to "2K",
+                            3840 to "4K",
+                        ).forEach { (value, label) ->
+                            FilterChip(
+                                selected = config.skipLongEdge == value,
+                                onClick = { vm.setSkipLongEdge(value) },
+                                label = { Text(label) },
+                            )
+                        }
+                    }
+                    if (config.skipLongEdge > 0) {
+                        val copyCount = selected.count {
+                            !vm.isProcessed(it) && vm.willCopy(it)
+                        }
+                        Spacer(Modifier.height(6.dp))
+                        Text(
+                            "长边 ≥ ${config.skipLongEdge} 时直接复制 · 本批预计 $copyCount 张",
+                            fontSize = 11.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(16.dp))
             Section("输出")
             Surface(
                 shape = RoundedCornerShape(18.dp),

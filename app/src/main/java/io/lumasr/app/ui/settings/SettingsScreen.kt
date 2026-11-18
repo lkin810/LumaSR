@@ -524,7 +524,7 @@ fun SettingsScreen(vm: AppViewModel) {
 
             item {
                 Text(
-                    "LumaSR 0.4.4 · Mihon Upscale 97 引擎 · NCNN Vulkan / Qualcomm QNN",
+                    "LumaSR 0.5.0 · Mihon Upscale 97 引擎 · NCNN Vulkan / Qualcomm QNN",
                     fontSize = 10.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                     modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp),

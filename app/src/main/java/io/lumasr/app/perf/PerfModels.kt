@@ -20,6 +20,7 @@ data class PerfImage(
     val outputHeight: Int = 0,
     val downscaled: Boolean = false,
     val outputBytes: Long = 0L,
+    val copied: Boolean = false,
 )
 
 /** One batch / single-image run. Persisted as JSON under filesDir/perf. */

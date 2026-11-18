@@ -171,9 +171,15 @@ class BatchWorker(
             }
             val writer = FolderScanner.OutputWriter(context, outputRoot)
 
+            // If every remaining item will be copied, skip model loading
+            // entirely: otherwise a 4K-only folder waits for NPU compile.
+            val needsUpscale = state.items.any {
+                it.status == QueueStatus.PENDING && !it.copyOnly
+            }
+
             // NPU first-use compile can take a minute. Do it explicitly so a
             // failure can fall back to Vulkan instead of failing the whole batch.
-            if (options.backend == Engine97.BACKEND_QUALCOMM_NPU) {
+            if (needsUpscale && options.backend == Engine97.BACKEND_QUALCOMM_NPU) {
                 val supported = EngineModels.npuSupports(
                     options.modelId, options.scale, options.noise, options.style,
                 )
@@ -220,29 +226,9 @@ class BatchWorker(
                 }
             }
 
-            val initStarted = SystemClock.elapsedRealtime()
-            var ready = Engine97.init(
-                context = context,
-                modelId = options.modelId,
-                scale = options.scale,
-                noise = options.noise,
-                style = options.style,
-                backend = options.backend,
-                precision = options.precision,
-                tileSize = options.tileSize,
-            )
-            if (!ready && options.backend == Engine97.BACKEND_QUALCOMM_NPU) {
-                options = options.copy(
-                    backend = Engine97.BACKEND_VULKAN,
-                    precision = Engine97.PRECISION_FP16,
-                )
-                state = state.copy(
-                    options = options,
-                    fallbackReason = "NPU 初始化失败：${
-                        Engine97.npuFailureDetail().take(180)
-                    }，已回退 Vulkan",
-                )
-                BatchRepository.persist(context, state)
+            var ready = true
+            if (needsUpscale) {
+                val initStarted = SystemClock.elapsedRealtime()
                 ready = Engine97.init(
                     context = context,
                     modelId = options.modelId,
@@ -253,8 +239,31 @@ class BatchWorker(
                     precision = options.precision,
                     tileSize = options.tileSize,
                 )
+                if (!ready && options.backend == Engine97.BACKEND_QUALCOMM_NPU) {
+                    options = options.copy(
+                        backend = Engine97.BACKEND_VULKAN,
+                        precision = Engine97.PRECISION_FP16,
+                    )
+                    state = state.copy(
+                        options = options,
+                        fallbackReason = "NPU 初始化失败：${
+                            Engine97.npuFailureDetail().take(180)
+                        }，已回退 Vulkan",
+                    )
+                    BatchRepository.persist(context, state)
+                    ready = Engine97.init(
+                        context = context,
+                        modelId = options.modelId,
+                        scale = options.scale,
+                        noise = options.noise,
+                        style = options.style,
+                        backend = options.backend,
+                        precision = options.precision,
+                        tileSize = options.tileSize,
+                    )
+                }
+                initMs = SystemClock.elapsedRealtime() - initStarted
             }
-            initMs = SystemClock.elapsedRealtime() - initStarted
             if (!ready) {
                 failPending(
                     context,
@@ -350,6 +359,60 @@ class BatchWorker(
 
                     val started = SystemClock.elapsedRealtime()
                     try {
+                        // Already high-resolution: copy bytes, never re-encode.
+                        if (item.copyOnly) {
+                            val outputUri = writer.copy(
+                                item.outputPath,
+                                Uri.parse(item.documentUri),
+                            )
+                            val elapsed = SystemClock.elapsedRealtime() - started
+                            item = if (outputUri == null) {
+                                item.copy(
+                                    status = QueueStatus.FAILED,
+                                    error = "复制失败",
+                                    elapsedMs = elapsed,
+                                )
+                            } else {
+                                item.copy(
+                                    status = QueueStatus.DONE,
+                                    progress = 1f,
+                                    outputUri = outputUri.toString(),
+                                    elapsedMs = elapsed,
+                                )
+                            }
+                            if (outputUri != null) {
+                                outputRecords[item.relativePath] = OutputRecord(
+                                    sourcePath = item.relativePath,
+                                    outputPath = item.outputPath,
+                                    format = item.outputPath
+                                        .substringAfterLast('.', "")
+                                        .uppercase(),
+                                    modelId = options.modelId,
+                                    scale = outputScale,
+                                    updatedAt = System.currentTimeMillis(),
+                                    copied = true,
+                                )
+                            }
+                            perfImages[index] = PerfImage(
+                                index = index,
+                                name = item.name,
+                                status = item.status,
+                                error = item.error,
+                                totalMs = elapsed,
+                                copied = outputUri != null,
+                            )
+                            state = state.withItem(index, item)
+                            BatchRepository.persist(context, state)
+                            completedCount += 1
+                            BatchNotifications.updateProgress(
+                                context,
+                                completedCount,
+                                state.items.size,
+                                "已完成 $completedCount/${state.items.size}",
+                            )
+                            continue
+                        }
+
                         val decodeStarted = SystemClock.elapsedRealtime()
                         val loaded = ImageLoader.decodeUri(
                             context,

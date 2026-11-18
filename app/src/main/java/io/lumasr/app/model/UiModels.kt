@@ -33,6 +33,8 @@ data class UpscaleConfig(
     val skipProcessed: Boolean = true,
     val outputFolderName: String = "LumaSR_Output",
     val notifications: Boolean = true,
+    /** Long edge at/above which images are copied instead of upscaled; 0 = off. */
+    val skipLongEdge: Int = 2560,
 ) {
     val model: EngineModel get() = EngineModels.byIdOrDefault(modelId)
     val outputScale: Int get() = EngineModels.outputScale(modelId, scale, style)

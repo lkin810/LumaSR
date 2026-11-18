@@ -1029,6 +1029,14 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         updateConfig { it.copy(skipProcessed = value) }
     }
 
+    fun setSkipLongEdge(value: Int) {
+        updateConfig { it.copy(skipLongEdge = value.coerceAtLeast(0)) }
+    }
+
+    /** True when this image will be copied as-is under the current threshold. */
+    fun willCopy(image: FolderImage): Boolean =
+        config.skipLongEdge > 0 && image.longEdge >= config.skipLongEdge
+
     fun backFromFolder() {
         scanJob?.cancel()
         scanning = false
@@ -1115,19 +1123,31 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             mutableSetOf()
         }
         val items = chosen.map { image ->
-            val outputPath = FolderScanner.uniqueOutputPath(
-                image,
-                config.preserveStructure,
-                config.format,
-                used,
-            )
             val skipped = config.skipProcessed && isProcessed(image)
+            val copyOnly = !skipped &&
+                config.skipLongEdge > 0 &&
+                image.longEdge >= config.skipLongEdge
+            val outputPath = if (copyOnly) {
+                FolderScanner.uniqueCopyOutputPath(
+                    image,
+                    config.preserveStructure,
+                    used,
+                )
+            } else {
+                FolderScanner.uniqueOutputPath(
+                    image,
+                    config.preserveStructure,
+                    config.format,
+                    used,
+                )
+            }
             QueueItem(
                 documentUri = image.documentUri.toString(),
                 name = image.name,
                 relativePath = image.relativePath,
                 outputPath = outputPath,
                 status = if (skipped) QueueStatus.SKIPPED else QueueStatus.PENDING,
+                copyOnly = copyOnly,
             )
         }
 
@@ -1144,6 +1164,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             tileSize = config.tileSize,
             preserveStructure = config.preserveStructure,
             notifications = config.notifications,
+            skipLongEdge = config.skipLongEdge,
         )
         val state = QueueState(
             items = items,

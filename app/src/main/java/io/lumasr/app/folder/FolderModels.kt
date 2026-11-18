@@ -14,6 +14,8 @@ data class OutputRecord(
     val modelId: Int = 0,
     val scale: Int = 2,
     val updatedAt: Long = 0L,
+    /** Output is the original file copied byte-for-byte, not upscaled. */
+    val copied: Boolean = false,
 )
 
 enum class GridFilter(val label: String) {
@@ -30,8 +32,12 @@ data class FolderImage(
     val sizeBytes: Long,
     val mimeType: String?,
     val alreadyProcessed: Boolean = false,
+    val width: Int = 0,
+    val height: Int = 0,
 ) {
     val isLarge: Boolean get() = sizeBytes >= LARGE_FILE_BYTES
+    val longEdge: Int get() = maxOf(width, height)
+    val megapixels: Float get() = width.toFloat() * height / 1_000_000f
 }
 
 data class FolderSnapshot(

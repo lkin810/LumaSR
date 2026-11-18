@@ -21,6 +21,8 @@ data class QueueItem(
     val error: String? = null,
     val outputUri: String? = null,
     val elapsedMs: Long = 0L,
+    /** Copy the source file as-is instead of running the upscaler. */
+    val copyOnly: Boolean = false,
 ) {
     val isFinished: Boolean
         get() = status == QueueStatus.DONE ||
@@ -42,6 +44,7 @@ data class QueueOptions(
     val tileSize: Int = 128,
     val preserveStructure: Boolean = true,
     val notifications: Boolean = true,
+    val skipLongEdge: Int = 0,
 )
 
 @Serializable
