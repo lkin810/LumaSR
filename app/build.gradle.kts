@@ -15,8 +15,8 @@ android {
         applicationId = "io.lumasr.app"
         minSdk = 29
         targetSdk = 35
-        versionCode = 10
-        versionName = "0.4.3-lab"
+        versionCode = 11
+        versionName = "0.4.4-lab"
 
         ndk {
             abiFilters += listOf("arm64-v8a")

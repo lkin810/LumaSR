@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.pm.ServiceInfo
 import android.graphics.Bitmap
 import android.net.Uri
+import android.os.PowerManager
 import android.os.SystemClock
 import androidx.work.CoroutineWorker
 import androidx.work.ForegroundInfo
@@ -32,6 +33,9 @@ import kotlinx.coroutines.withContext
  * overlap; encoding is awaited before the next inference starts.
  */
 private const val MAX_OVERLAP_OUTPUT_PIXELS = 8_000_000L
+
+/** Safety cap; released in finally and by the OS on process death. */
+private const val WAKE_LOCK_TIMEOUT_MS = 6 * 60 * 60 * 1000L
 
 class BatchWorker(
     appContext: Context,
@@ -129,6 +133,16 @@ class BatchWorker(
 
         setForeground(createForegroundInfo(0, state.items.size, "准备任务"))
         BatchNotifications.updateProgress(context, 0, state.items.size, "准备任务")
+
+        // Keep the CPU awake while the screen is off. The foreground service
+        // alone raises process priority but does not prevent suspend, and
+        // some OEM battery managers freeze background work entirely.
+        val wakeLock = context.getSystemService(PowerManager::class.java)
+            ?.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "LumaSR:batch")
+            ?.apply {
+                setReferenceCounted(false)
+                acquire(WAKE_LOCK_TIMEOUT_MS)
+            }
 
         val outputRecords = mutableMapOf<String, OutputRecord>()
         val runStartedAt = System.currentTimeMillis()
@@ -547,6 +561,9 @@ class BatchWorker(
                         ),
                     )
                 }
+            }
+            runCatching {
+                if (wakeLock?.isHeld == true) wakeLock.release()
             }
             runCatching {
                 BatchNotifications.notifyDone(
