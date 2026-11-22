@@ -26,6 +26,8 @@ Real-CUGAN Pro 只有 no-denoise / denoise3x / conservative。
 
 ## 2. Qualcomm NPU 模型（QNN / HTP）
 
+> 以下运行时库与 DLC 不随公开仓库分发，需自行用 QAIRT 2.49.0 获取和生成，放入对应目录后再构建。
+
 15 个 FP16 DLC + 1 个 INT8 W8A8 DLC，位于 `engine97/src/main/assets/qnn-models/`：
 
 | DLC | 精度 |

@@ -77,6 +77,10 @@
 
 要求：JDK 17、Android SDK 35。**不需要 NDK/CMake**，引擎是预编译 `.so`。
 
+> 公开仓库不包含 Qualcomm QNN 运行时（`libQnn*.so`）和 NPU 模型（`qnn-models/`），
+> 默认构建只有 Vulkan GPU。需要 NPU 时，从高通 QAIRT 2.49.0 SDK 获取运行时并生成 DLC，
+> 放回 `engine97/src/main/jniLibs/arm64-v8a/` 和 `engine97/src/main/assets/qnn-models/` 后再构建。
+
 常用命令：
 
 ```bash
