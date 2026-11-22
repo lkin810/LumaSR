@@ -29,6 +29,8 @@ object AppPrefs {
             skipProcessed = prefs.getBoolean("skip_processed", true),
             outputFolderName = prefs.getString("output_folder", "LumaSR_Output")
                 ?.takeIf { it.isNotBlank() } ?: "LumaSR_Output",
+            outputTreeUri = prefs.getString("output_tree_uri", "").orEmpty(),
+            outputTreeName = prefs.getString("output_tree_name", "").orEmpty(),
             notifications = prefs.getBoolean("notifications", true),
             skipLongEdge = prefs.getInt("skip_long_edge", 2560),
         )
@@ -50,6 +52,8 @@ object AppPrefs {
             .putBoolean("preserve_structure", config.preserveStructure)
             .putBoolean("skip_processed", config.skipProcessed)
             .putString("output_folder", config.outputFolderName)
+            .putString("output_tree_uri", config.outputTreeUri)
+            .putString("output_tree_name", config.outputTreeName)
             .putBoolean("notifications", config.notifications)
             .putInt("skip_long_edge", config.skipLongEdge)
             .apply()

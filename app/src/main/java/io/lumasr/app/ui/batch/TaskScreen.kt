@@ -144,7 +144,7 @@ fun TaskScreen(vm: AppViewModel, state: QueueState?) {
                             "结果预览",
                             fontSize = 12.sp,
                             fontWeight = FontWeight.SemiBold,
-                            color = Color(0xFFC8D3E4),
+                            color = MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier.weight(1f),
                         )
                         Text(
@@ -178,7 +178,7 @@ fun TaskScreen(vm: AppViewModel, state: QueueState?) {
                     "任务列表",
                     fontSize = 12.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = Color(0xFFC8D3E4),
+                    color = MaterialTheme.colorScheme.onSurface,
                 )
             }
 
@@ -230,7 +230,7 @@ private fun OverallCard(state: QueueState, current: QueueItem?) {
                     )
                     Spacer(Modifier.height(3.dp))
                     Text(
-                        current?.name ?: "${state.folderName}/${state.outputFolderName}",
+                        current?.name ?: outputLabel(state),
                         fontSize = 11.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,
@@ -298,7 +298,7 @@ private fun OverallCard(state: QueueState, current: QueueItem?) {
             if (totalMs > 0) {
                 Spacer(Modifier.height(8.dp))
                 Text(
-                    "总用时 ${totalMs / 1000} 秒 · 输出到 ${state.folderName}/${state.outputFolderName}",
+                    "总用时 ${totalMs / 1000} 秒 · 输出到 ${outputLabel(state)}",
                     fontSize = 10.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -306,6 +306,13 @@ private fun OverallCard(state: QueueState, current: QueueItem?) {
         }
     }
 }
+
+private fun outputLabel(state: QueueState): String =
+    if (!state.outputTreeUri.isNullOrBlank()) {
+        "已指定导出目录/${state.folderName}"
+    } else {
+        "${state.folderName}/${state.outputFolderName}"
+    }
 
 @Composable
 private fun FailedCard(state: QueueState, onRetry: () -> Unit) {

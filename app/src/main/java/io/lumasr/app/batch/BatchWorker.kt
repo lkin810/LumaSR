@@ -121,6 +121,9 @@ class BatchWorker(
         val outputScale = EngineModels.outputScale(options.modelId, options.scale, options.style)
         val format = runCatching { SaveFormat.valueOf(options.format) }.getOrDefault(SaveFormat.PNG)
         val treeUri = initial.treeUri?.let { runCatching { Uri.parse(it) }.getOrNull() }
+        val exportTreeUri = initial.outputTreeUri
+            ?.let { runCatching { Uri.parse(it) }.getOrNull() }
+        val outputIndexTree = exportTreeUri ?: treeUri
 
         var state = initial.copy(
             running = true,
@@ -160,13 +163,11 @@ class BatchWorker(
             if (state.items.none { it.status == QueueStatus.PENDING }) {
                 return finish(context, state)
             }
-            val outputRoot = FolderScanner.ensureOutputRoot(
-                context,
-                treeUri,
-                initial.outputFolderName,
-            )
+            val outputRoot = outputIndexTree?.let {
+                FolderScanner.ensureOutputRoot(context, it, initial.outputFolderName)
+            }
             if (outputRoot == null) {
-                failPending(context, state, "无法创建输出文件夹，请重新授权文件夹")
+                failPending(context, state, "无法创建导出文件夹，请重新授权文件夹")
                 return Result.failure()
             }
             val writer = FolderScanner.OutputWriter(context, outputRoot)
@@ -542,7 +543,7 @@ class BatchWorker(
 
             if (isStopped) {
                 withContext(NonCancellable) {
-                    saveIndex(context, treeUri, initial.outputFolderName, options, outputRecords)
+                    saveIndex(context, outputIndexTree, initial.outputFolderName, options, outputRecords)
                     state = state.copy(
                         running = false,
                         items = state.items.map {
@@ -558,11 +559,11 @@ class BatchWorker(
                 return Result.success()
             }
 
-            saveIndex(context, treeUri, initial.outputFolderName, options, outputRecords)
+            saveIndex(context, outputIndexTree, initial.outputFolderName, options, outputRecords)
             return finish(context, state)
         } catch (c: CancellationException) {
             withContext(NonCancellable) {
-                saveIndex(context, treeUri, initial.outputFolderName, options, outputRecords)
+                saveIndex(context, outputIndexTree, initial.outputFolderName, options, outputRecords)
                 state = state.copy(
                     running = false,
                     items = state.items.map {
@@ -578,7 +579,7 @@ class BatchWorker(
             throw c
         } finally {
             withContext(NonCancellable) {
-                saveIndex(context, treeUri, initial.outputFolderName, options, outputRecords)
+                saveIndex(context, outputIndexTree, initial.outputFolderName, options, outputRecords)
                 Engine97.cancel()
                 runCatching {
                     PerfLog.save(

@@ -373,9 +373,15 @@ fun BatchConfigScreen(vm: AppViewModel) {
                         )
                         Spacer(Modifier.width(10.dp))
                         Column(Modifier.weight(1f)) {
-                            Text("输出文件夹", fontSize = 13.sp, fontWeight = FontWeight.Medium)
+                            Text("导出文件夹", fontSize = 13.sp, fontWeight = FontWeight.Medium)
                             Text(
-                                "${vm.snapshot?.folderName.orEmpty()}/${config.outputFolderName}",
+                                if (config.outputTreeUri.isNotBlank()) {
+                                    "${
+                                        config.outputTreeName.ifBlank { "导出目录" }
+                                    }/${vm.snapshot?.folderName.orEmpty()}"
+                                } else {
+                                    "${vm.snapshot?.folderName.orEmpty()}/${config.outputFolderName}"
+                                },
                                 fontSize = 11.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 maxLines = 1,
@@ -479,7 +485,7 @@ private fun Section(text: String) {
         text,
         fontSize = 12.sp,
         fontWeight = FontWeight.SemiBold,
-        color = Color(0xFFC8D3E4),
+        color = MaterialTheme.colorScheme.onSurface,
         modifier = Modifier.padding(bottom = 6.dp, top = 2.dp),
     )
 }

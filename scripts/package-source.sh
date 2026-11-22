@@ -41,7 +41,7 @@ rsync -a \
   echo "package: io.lumasr.app"
   echo "abi: arm64-v8a"
   echo "build: JDK 17 + Android SDK 35, ./gradlew :app:assembleRelease"
-  echo "docs: README.md, docs/DEV_HANDOFF.md, docs/PLAN.md, docs/MODELS.md, docs/DESIGN.md"
+  echo "docs: README.md, docs/DEV_HANDOFF.md, docs/MODELS.md"
   echo
   echo "Excluded: build/, .gradle/, .kotlin/, dist/, local.properties, APK, signing keys"
 } > "$DEST/SOURCE_INFO.txt"

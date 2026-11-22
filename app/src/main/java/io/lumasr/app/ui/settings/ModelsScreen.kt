@@ -81,7 +81,7 @@ fun ModelsScreen(vm: AppViewModel) {
                         category.label,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = Color(0xFFC8D3E4),
+                        color = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.padding(top = 8.dp, bottom = 2.dp),
                     )
                 }
@@ -138,7 +138,7 @@ private fun ModelCard(
             if (selected) {
                 MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
             } else {
-                Color.White.copy(alpha = 0.05f)
+                MaterialTheme.colorScheme.surfaceVariant
             },
         ),
         modifier = Modifier

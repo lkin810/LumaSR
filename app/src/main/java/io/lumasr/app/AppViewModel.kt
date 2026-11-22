@@ -33,6 +33,10 @@ import io.lumasr.app.folder.FolderImage
 import io.lumasr.app.folder.FolderScanner
 import io.lumasr.app.folder.FolderSnapshot
 import io.lumasr.app.folder.GridFilter
+import io.lumasr.app.folder.PreprocessAction
+import io.lumasr.app.folder.PreprocessAnalyzer
+import io.lumasr.app.folder.PreprocessItem
+import io.lumasr.app.folder.PreprocessReport
 import io.lumasr.app.model.CompareInfo
 import io.lumasr.app.model.Dest
 import io.lumasr.app.model.SaveFormat
@@ -179,6 +183,21 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     private var scanJob: Job? = null
     private var batchWasRunning = false
 
+    // ---- preprocess analysis -----------------------------------------------
+    var preprocessReport by mutableStateOf<PreprocessReport?>(null)
+        private set
+
+    var preprocessAnalyzing by mutableStateOf(false)
+        private set
+
+    var preprocessProgress by mutableStateOf(0f)
+        private set
+
+    var preprocessDone by mutableStateOf(0)
+        private set
+
+    private var preprocessJob: Job? = null
+
     // ---- result compare ----------------------------------------------------
     var compareFromBatch by mutableStateOf(false)
         private set
@@ -289,8 +308,12 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 val refreshed = withContext(Dispatchers.IO) {
                     FolderScanner.refreshOutputState(
                         context = app,
-                        treeUri = snap.treeUri,
-                        outputFolderName = cfg.outputFolderName,
+                        outputTreeUri = outputTree(cfg) ?: snap.treeUri,
+                        outputFolderName = if (cfg.outputTreeUri.isNotBlank()) {
+                            snap.folderName
+                        } else {
+                            cfg.outputFolderName
+                        },
                         preserveStructure = cfg.preserveStructure,
                     )
                 }
@@ -974,6 +997,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         val app = getApplication<Application>()
         val previous = selectedPaths
         scanJob?.cancel()
+        preprocessReport = null
         snapshot = null
         scanning = true
         scanMessage = "正在扫描文件夹…"
@@ -989,6 +1013,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                         preserveStructure = config.preserveStructure,
                         format = config.format,
                         outputFolderName = config.outputFolderName,
+                        outputTreeUri = outputTree(config),
                     )
                 }
                 snapshot = result
@@ -1031,6 +1056,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     fun setSkipLongEdge(value: Int) {
         updateConfig { it.copy(skipLongEdge = value.coerceAtLeast(0)) }
+        preprocessReport = null
     }
 
     /** True when this image will be copied as-is under the current threshold. */
@@ -1040,6 +1066,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun backFromFolder() {
         scanJob?.cancel()
         scanning = false
+        preprocessReport = null
         snapshot = null
         dest = Dest.Home
     }
@@ -1054,14 +1081,73 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         dest = Dest.FolderOverview(uri)
     }
 
-    fun enterBatchConfig() {
+    fun enterPreprocess() {
+        if (selectedPaths.isEmpty()) {
+            errorMessage = "请先选择要处理的图片"
+            return
+        }
         val uri = snapshot?.treeUri ?: return
-        dest = Dest.BatchConfig(uri)
+        dest = Dest.Preprocess(uri)
+    }
+
+    /** Measures resolution buckets and an advisory sharpness score. */
+    fun analyzeSelection() {
+        if (preprocessAnalyzing) return
+        val chosen = selectedImages
+        if (chosen.isEmpty()) {
+            errorMessage = "请先选择要处理的图片"
+            return
+        }
+        val app = getApplication<Application>()
+        val threshold = config.skipLongEdge
+        preprocessJob?.cancel()
+        preprocessReport = null
+        preprocessProgress = 0f
+        preprocessDone = 0
+        preprocessAnalyzing = true
+
+        preprocessJob = viewModelScope.launch {
+            try {
+                val items = withContext(Dispatchers.IO) {
+                    chosen.mapIndexed { index, image ->
+                        ensureActive()
+                        val action = PreprocessAnalyzer.actionFor(
+                            image = image,
+                            skipLongEdge = threshold,
+                            alreadyProcessed = config.skipProcessed && isProcessed(image),
+                        )
+                        // Only upscaled images need a sharpness sample.
+                        val sharpness = if (action != PreprocessAction.UPSCALE) {
+                            -1f
+                        } else {
+                            PreprocessAnalyzer.sharpnessOf(app, image.documentUri)
+                        }
+                        preprocessDone = index + 1
+                        preprocessProgress = (index + 1).toFloat() / chosen.size
+                        PreprocessItem(image = image, action = action, sharpness = sharpness)
+                    }
+                }
+                preprocessReport = PreprocessReport(items = items, skipLongEdge = threshold)
+            } catch (c: CancellationException) {
+                throw c
+            } catch (t: Throwable) {
+                errorMessage = "分析失败：${t.message ?: t.javaClass.simpleName}"
+            } finally {
+                preprocessAnalyzing = false
+            }
+        }
     }
 
     fun backToGrid() {
+        preprocessJob?.cancel()
+        preprocessAnalyzing = false
         val uri = snapshot?.treeUri ?: return
         dest = Dest.Grid(uri)
+    }
+
+    fun enterBatchConfig() {
+        val uri = snapshot?.treeUri ?: return
+        dest = Dest.BatchConfig(uri)
     }
 
     // ---- grid selection ----------------------------------------------------
@@ -1075,6 +1161,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun toggleImage(image: FolderImage) {
+        preprocessReport = null
         selectedPaths = if (image.relativePath in selectedPaths) {
             selectedPaths - image.relativePath
         } else {
@@ -1083,6 +1170,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun toggleSelectAllVisible() {
+        preprocessReport = null
         val visible = visibleImages.map { it.relativePath }.toSet()
         selectedPaths = if (allVisibleSelected) {
             selectedPaths - visible
@@ -1092,6 +1180,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun invertVisible() {
+        preprocessReport = null
         val visible = visibleImages.map { it.relativePath }.toSet()
         selectedPaths = (selectedPaths - visible) + (visible - selectedPaths)
     }
@@ -1172,7 +1261,12 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             running = true,
             treeUri = snap.treeUri.toString(),
             folderName = snap.folderName,
-            outputFolderName = config.outputFolderName,
+            outputFolderName = if (config.outputTreeUri.isNotBlank()) {
+                snap.folderName
+            } else {
+                config.outputFolderName
+            },
+            outputTreeUri = config.outputTreeUri.takeIf { it.isNotBlank() },
             startedAt = System.currentTimeMillis(),
         )
 
@@ -1202,12 +1296,61 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     fun openOutputFolder() {
         val context = getApplication<Application>()
-        val tree = BatchRepository.snapshot?.treeUri ?: snapshot?.treeUri?.toString()
+        val state = BatchRepository.snapshot
+        val custom = state?.outputTreeUri ?: config.outputTreeUri.takeIf { it.isNotBlank() }
+        val tree = custom ?: state?.treeUri ?: snapshot?.treeUri?.toString()
         val uri = tree?.let { runCatching { Uri.parse(it) }.getOrNull() }
         if (uri != null && FolderScanner.openFolder(context, uri)) return
-        val folder = BatchRepository.snapshot?.outputFolderName ?: config.outputFolderName
-        val parent = BatchRepository.snapshot?.folderName ?: snapshot?.folderName.orEmpty()
-        errorMessage = "输出位置：${parent.ifBlank { "源文件夹" }}/$folder"
+        val source = state?.folderName ?: snapshot?.folderName.orEmpty()
+        if (custom != null) {
+            val name = config.outputTreeName.takeIf { it.isNotBlank() } ?: "已指定导出文件夹"
+            errorMessage = "输出位置：$name/${source.ifBlank { "源文件夹名" }}"
+        } else {
+            val folder = state?.outputFolderName ?: config.outputFolderName
+            errorMessage = "输出位置：${source.ifBlank { "源文件夹" }}/$folder"
+        }
+    }
+
+    /** Picks a fixed export root; each source gets a sub-folder named after it. */
+    fun setOutputTree(uri: Uri) {
+        val app = getApplication<Application>()
+        if (!FolderScanner.takePermission(app, uri)) {
+            errorMessage = "无法获得该文件夹的写入权限"
+            return
+        }
+        val source = snapshot?.treeUri ?: lastFolderUri
+        if (source != null && isInside(uri, source)) {
+            errorMessage = "导出文件夹不能是源文件夹本身或其子目录"
+            return
+        }
+        val name = runCatching { DocumentFile.fromTreeUri(app, uri)?.name }
+            .getOrNull()
+            .orEmpty()
+        updateConfig { it.copy(outputTreeUri = uri.toString(), outputTreeName = name) }
+        preprocessReport = null
+        snapshot?.let { rescan(it.treeUri, keepSelection = true) }
+    }
+
+    fun clearOutputTree() {
+        updateConfig { it.copy(outputTreeUri = "", outputTreeName = "") }
+        preprocessReport = null
+        snapshot?.let { rescan(it.treeUri, keepSelection = true) }
+    }
+
+    private fun outputTree(cfg: UpscaleConfig): Uri? = cfg.outputTreeUri
+        .takeIf { it.isNotBlank() }
+        ?.let { runCatching { Uri.parse(it) }.getOrNull() }
+
+    private fun isInside(candidate: Uri, source: Uri): Boolean {
+        if (candidate == source) return true
+        if (candidate.authority != source.authority) return false
+        val candidateId = runCatching {
+            android.provider.DocumentsContract.getTreeDocumentId(candidate)
+        }.getOrNull() ?: return false
+        val sourceId = runCatching {
+            android.provider.DocumentsContract.getTreeDocumentId(source)
+        }.getOrNull() ?: return false
+        return candidateId == sourceId || candidateId.startsWith("$sourceId/")
     }
 
     // ---- result compare ----------------------------------------------------

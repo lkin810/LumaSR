@@ -127,7 +127,7 @@ fun GridSelectScreen(vm: AppViewModel) {
                     }
                     Spacer(Modifier.height(9.dp))
                     Button(
-                        onClick = vm::enterBatchConfig,
+                        onClick = vm::enterPreprocess,
                         enabled = selected.isNotEmpty(),
                         modifier = Modifier
                             .fillMaxWidth()
@@ -138,7 +138,7 @@ fun GridSelectScreen(vm: AppViewModel) {
                             contentColor = MaterialTheme.colorScheme.onPrimary,
                         ),
                     ) {
-                        Text("下一步：设置参数", fontWeight = FontWeight.SemiBold)
+                        Text("下一步：预处理", fontWeight = FontWeight.SemiBold)
                     }
                 }
             }

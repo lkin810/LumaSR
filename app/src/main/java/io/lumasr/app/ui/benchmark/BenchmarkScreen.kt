@@ -133,7 +133,7 @@ fun BenchmarkScreen(vm: AppViewModel) {
                         "选择模型",
                         fontSize = 12.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = Color(0xFFC8D3E4),
+                        color = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.weight(1f),
                     )
                     TextButton(onClick = { vm.openModelGuide(fromBenchmark = true) }) {
@@ -152,7 +152,7 @@ fun BenchmarkScreen(vm: AppViewModel) {
                             "结果 ${vm.benchmarkResults.size}",
                             fontSize = 12.sp,
                             fontWeight = FontWeight.SemiBold,
-                            color = Color(0xFFC8D3E4),
+                            color = MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier.weight(1f),
                         )
                         if (vm.benchmarkTestFolderUri != null) {

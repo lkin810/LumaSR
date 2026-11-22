@@ -55,6 +55,8 @@ data class QueueState(
     val treeUri: String? = null,
     val folderName: String = "",
     val outputFolderName: String = "LumaSR_Output",
+    /** Fixed export root chosen in settings; null keeps output in the source. */
+    val outputTreeUri: String? = null,
     val startedAt: Long = 0L,
     val finishedAt: Long = 0L,
     val actualBackend: Int = -1,

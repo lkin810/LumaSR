@@ -19,8 +19,8 @@ import java.io.IOException
 
 /**
  * SAF helpers: recursive folder scan, output folder creation and bitmap writes.
- * All output goes to `<source>/<outputFolderName>`, optionally mirroring the
- * source sub-directory structure.
+ * Output goes to `<source>/<outputFolderName>` by default, or to
+ * `<exportRoot>/<sourceName>` when a fixed export root is configured.
  */
 object FolderScanner {
     private const val TAG = "LumaSR"
@@ -67,6 +67,7 @@ object FolderScanner {
         preserveStructure: Boolean,
         format: SaveFormat,
         outputFolderName: String,
+        outputTreeUri: Uri? = null,
         onCount: (Int) -> Unit = {},
     ): FolderSnapshot = withContext(Dispatchers.IO) {
         val rootDocId = runCatching { DocumentsContract.getTreeDocumentId(treeUri) }.getOrNull()
@@ -77,30 +78,47 @@ object FolderScanner {
             ?: rootDocument.name?.takeIf { it.isNotBlank() }
             ?: "所选文件夹"
 
+        // A user-picked export root stores each source in a sub-folder named
+        // after it; the default keeps the old layout inside the source tree.
+        val outputTree = outputTreeUri ?: treeUri
+        val outputFolder = if (outputTreeUri != null) folderName else outputFolderName
+        val outputDocId = if (outputTreeUri != null) {
+            runCatching { DocumentsContract.getTreeDocumentId(outputTree) }.getOrNull()
+        } else {
+            null
+        }
+
         val images = mutableListOf<FolderImage>()
         if (rootChildren != null && rootDocId != null) {
             walkCursor(
-                context, treeUri, rootChildren, "", recursive, outputFolderName, images, onCount,
+                context, treeUri, rootChildren, "", recursive,
+                outputFolderName, outputDocId, images, onCount,
             )
         } else {
             walkDocumentFile(
-                context, rootDocument, "", recursive, outputFolderName, images, onCount,
+                context, rootDocument, "", recursive,
+                outputFolderName, outputDocId, images, onCount,
             )
         }
 
         val outputFiles = mutableSetOf<String>()
-        if (rootChildren != null) {
-            rootChildren
-                .firstOrNull { it.isDirectory && it.name == outputFolderName }
-                ?.let { collectOutputCursor(context, treeUri, it.docId, "", outputFiles) }
+        val outputRootDocId = runCatching {
+            DocumentsContract.getTreeDocumentId(outputTree)
+        }.getOrNull()
+        val outputChildren = outputRootDocId?.let { queryChildren(context, outputTree, it) }
+        if (outputChildren != null) {
+            outputChildren
+                .firstOrNull { it.isDirectory && it.name == outputFolder }
+                ?.let { collectOutputCursor(context, outputTree, it.docId, "", outputFiles) }
         } else {
-            runCatching { rootDocument.findFile(outputFolderName) }
+            runCatching { DocumentFile.fromTreeUri(context, outputTree) }
                 .getOrNull()
+                ?.findFile(outputFolder)
                 ?.takeIf { it.isDirectory }
                 ?.let { collectOutputDocumentFile(it, "", outputFiles) }
         }
 
-        val records = OutputIndex.load(context, treeUri, outputFolderName, preserveStructure)
+        val records = OutputIndex.load(context, outputTree, outputFolder, preserveStructure)
         val annotated = images
             .map { image ->
                 image.copy(
@@ -117,7 +135,7 @@ object FolderScanner {
             folderName = folderName,
             images = annotated,
             recursive = recursive,
-            outputFolderName = outputFolderName,
+            outputFolderName = outputFolder,
             outputFileCount = outputFiles.size,
             outputFiles = outputFiles,
             outputRecords = records,
@@ -127,26 +145,31 @@ object FolderScanner {
     /** Re-reads only the output tree after a batch finishes; no input rescan. */
     suspend fun refreshOutputState(
         context: Context,
-        treeUri: Uri,
+        outputTreeUri: Uri,
         outputFolderName: String,
         preserveStructure: Boolean,
     ): OutputRefresh = withContext(Dispatchers.IO) {
         val files = mutableSetOf<String>()
-        val rootDocId = runCatching { DocumentsContract.getTreeDocumentId(treeUri) }.getOrNull()
-        val rootChildren = rootDocId?.let { queryChildren(context, treeUri, it) }
+        val rootDocId = runCatching {
+            DocumentsContract.getTreeDocumentId(outputTreeUri)
+        }.getOrNull()
+        val rootChildren = rootDocId?.let { queryChildren(context, outputTreeUri, it) }
         if (rootChildren != null) {
             rootChildren
                 .firstOrNull { it.isDirectory && it.name == outputFolderName }
-                ?.let { collectOutputCursor(context, treeUri, it.docId, "", files) }
+                ?.let { collectOutputCursor(context, outputTreeUri, it.docId, "", files) }
         } else {
-            runCatching { DocumentFile.fromTreeUri(context, treeUri)?.findFile(outputFolderName) }
+            runCatching { DocumentFile.fromTreeUri(context, outputTreeUri) }
                 .getOrNull()
+                ?.findFile(outputFolderName)
                 ?.takeIf { it.isDirectory }
                 ?.let { collectOutputDocumentFile(it, "", files) }
         }
         OutputRefresh(
             files = files,
-            records = OutputIndex.load(context, treeUri, outputFolderName, preserveStructure),
+            records = OutputIndex.load(
+                context, outputTreeUri, outputFolderName, preserveStructure,
+            ),
         )
     }
 
@@ -171,6 +194,10 @@ object FolderScanner {
         return expectedOutputPath(image, preserveStructure, format) in outputFiles
     }
 
+    private fun isExportDir(docId: String?, skipDocId: String?): Boolean =
+        docId != null && skipDocId != null &&
+            (docId == skipDocId || skipDocId.startsWith("$docId/"))
+
     private suspend fun walkCursor(
         context: Context,
         treeUri: Uri,
@@ -178,6 +205,7 @@ object FolderScanner {
         prefix: String,
         recursive: Boolean,
         outputFolderName: String,
+        skipDocId: String?,
         out: MutableList<FolderImage>,
         onCount: (Int) -> Unit,
     ) {
@@ -192,10 +220,13 @@ object FolderScanner {
                 ) {
                     continue
                 }
+                // Never descend into a user-picked export root, even if it
+                // happens to sit inside the source folder.
+                if (isExportDir(child.docId, skipDocId)) continue
                 val nested = queryChildren(context, treeUri, child.docId) ?: continue
                 walkCursor(
                     context, treeUri, nested, "$prefix${child.name}/", true,
-                    outputFolderName, out, onCount,
+                    outputFolderName, skipDocId, out, onCount,
                 )
             } else {
                 if (!isImage(child.name, child.mimeType)) continue
@@ -223,6 +254,7 @@ object FolderScanner {
         prefix: String,
         recursive: Boolean,
         outputFolderName: String,
+        skipDocId: String?,
         out: MutableList<FolderImage>,
         onCount: (Int) -> Unit,
     ) {
@@ -237,8 +269,13 @@ object FolderScanner {
                 ) {
                     continue
                 }
+                val childDocId = runCatching {
+                    DocumentsContract.getDocumentId(child.uri)
+                }.getOrNull()
+                if (isExportDir(childDocId, skipDocId)) continue
                 walkDocumentFile(
-                    context, child, "$prefix$name/", true, outputFolderName, out, onCount,
+                    context, child, "$prefix$name/", true,
+                    outputFolderName, skipDocId, out, onCount,
                 )
             } else if (isImage(name, child.type)) {
                 val (width, height) = readDimensions(context, child.uri)

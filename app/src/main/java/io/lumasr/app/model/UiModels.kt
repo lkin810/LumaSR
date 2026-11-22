@@ -32,6 +32,9 @@ data class UpscaleConfig(
     val preserveStructure: Boolean = true,
     val skipProcessed: Boolean = true,
     val outputFolderName: String = "LumaSR_Output",
+    /** User-picked export root; empty means "inside the source folder". */
+    val outputTreeUri: String = "",
+    val outputTreeName: String = "",
     val notifications: Boolean = true,
     /** Long edge at/above which images are copied instead of upscaled; 0 = off. */
     val skipLongEdge: Int = 2560,
@@ -120,6 +123,7 @@ sealed interface Dest {
     data object PerfLog : Dest
     data class FolderOverview(val treeUri: Uri) : Dest
     data class Grid(val treeUri: Uri) : Dest
+    data class Preprocess(val treeUri: Uri) : Dest
     data class BatchConfig(val treeUri: Uri) : Dest
     data class Configure(val uris: List<Uri>, val batch: Boolean) : Dest
     data object Processing : Dest

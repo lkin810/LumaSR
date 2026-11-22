@@ -83,7 +83,7 @@ fun ModelGuideScreen(vm: AppViewModel) {
                         category.label,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = Color(0xFFC8D3E4),
+                        color = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.padding(top = 6.dp),
                     )
                 }

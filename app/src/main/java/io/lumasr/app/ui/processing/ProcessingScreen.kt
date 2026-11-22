@@ -35,11 +35,7 @@ fun ProcessingScreen(
     Box(
         Modifier
             .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    listOf(Color(0xFF0B0E14), Color(0xFF101B2E), Color(0xFF0B0E14)),
-                ),
-            ),
+            .background(MaterialTheme.colorScheme.background),
         contentAlignment = Alignment.Center,
     ) {
         Column(
@@ -59,7 +55,7 @@ fun ProcessingScreen(
                     "${(progress * 100).toInt()}%",
                     fontSize = 30.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFFF2F5FA),
+                    color = MaterialTheme.colorScheme.onBackground,
                 )
             }
 
@@ -67,7 +63,7 @@ fun ProcessingScreen(
             Text(
                 stage.ifBlank { "处理中" },
                 style = MaterialTheme.typography.titleMedium,
-                color = Color(0xFFF2F5FA),
+                color = MaterialTheme.colorScheme.onBackground,
             )
             Spacer(Modifier.height(8.dp))
             Text(

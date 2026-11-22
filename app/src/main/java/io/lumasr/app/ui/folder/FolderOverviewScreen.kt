@@ -179,7 +179,7 @@ fun FolderOverviewScreen(vm: AppViewModel) {
                 "扫描与输出",
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.SemiBold,
-                color = Color(0xFFC8D3E4),
+                color = MaterialTheme.colorScheme.onSurface,
             )
             Spacer(Modifier.height(8.dp))
             Surface(
@@ -212,8 +212,14 @@ fun FolderOverviewScreen(vm: AppViewModel) {
                     )
                     SettingRow(
                         icon = Icons.Rounded.Folder,
-                        title = "输出文件夹",
-                        subtitle = "${snapshot.folderName}/${vm.config.outputFolderName}",
+                        title = "导出文件夹",
+                        subtitle = if (vm.config.outputTreeUri.isNotBlank()) {
+                            "${
+                                vm.config.outputTreeName.ifBlank { "导出目录" }
+                            }/${snapshot.folderName}"
+                        } else {
+                            "${snapshot.folderName}/${vm.config.outputFolderName}"
+                        },
                         trailing = {
                             Text(
                                 "${snapshot.outputFileCount} 个文件",
@@ -253,7 +259,7 @@ fun FolderOverviewScreen(vm: AppViewModel) {
 private fun InfoChip(text: String) {
     Surface(
         shape = RoundedCornerShape(50),
-        color = Color.White.copy(alpha = 0.04f),
+        color = MaterialTheme.colorScheme.surfaceVariant,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f)),
     ) {
         Text(
@@ -304,7 +310,7 @@ private fun SettingRow(
                 Modifier
                     .fillMaxWidth()
                     .height(1.dp)
-                    .background(Color.White.copy(alpha = 0.05f)),
+                    .background(MaterialTheme.colorScheme.outline.copy(alpha = 0.4f)),
             )
         }
     }

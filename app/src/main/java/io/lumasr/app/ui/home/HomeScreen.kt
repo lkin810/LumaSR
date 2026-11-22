@@ -41,6 +41,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -79,9 +80,10 @@ fun HomeScreen(
                 Column(Modifier.weight(1f)) {
                     Text(
                         "光影超分",
-                        fontSize = 30.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFFF2F5FA),
+                        fontFamily = FontFamily.Serif,
+                        fontSize = 32.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onBackground,
                     )
                     Text(
                         "文件夹批量 · 本地 AI 放大",
@@ -96,8 +98,8 @@ fun HomeScreen(
 
             Surface(
                 shape = RoundedCornerShape(24.dp),
-                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.09f),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.38f)),
+                color = MaterialTheme.colorScheme.surface,
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.8f)),
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(24.dp))
@@ -111,7 +113,7 @@ fun HomeScreen(
                         Modifier
                             .size(54.dp)
                             .clip(RoundedCornerShape(17.dp))
-                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.16f)),
+                            .background(MaterialTheme.colorScheme.primaryContainer),
                         contentAlignment = Alignment.Center,
                     ) {
                         Icon(
@@ -126,8 +128,8 @@ fun HomeScreen(
                         Text("选择文件夹批量超分", fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
                         Spacer(Modifier.height(4.dp))
                         Text(
-                            "递归扫描图片，一键全选，自动输出到源文件夹",
-                            fontSize = 11.sp,
+                            "递归扫描图片，一键全选，结果可统一导出",
+                            fontSize = 12.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             lineHeight = 16.sp,
                         )
@@ -269,7 +271,7 @@ private fun MiniCard(
                 Modifier
                     .size(34.dp)
                     .clip(RoundedCornerShape(11.dp))
-                    .background(Color.White.copy(alpha = 0.05f)),
+                    .background(MaterialTheme.colorScheme.surfaceVariant),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
@@ -302,7 +304,7 @@ private fun DeviceCard(vm: AppViewModel) {
                 Modifier
                     .size(42.dp)
                     .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)),
+                    .background(MaterialTheme.colorScheme.primaryContainer),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(

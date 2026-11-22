@@ -129,7 +129,7 @@ fun CompareView(
                     style = Fill,
                 )
                 drawCircle(
-                    color = Color(0xFF7AA2FF),
+                    color = Color(0xFFF5F0E6),
                     radius = 6.dp.toPx(),
                     center = Offset(x, size.height / 2f),
                 )

@@ -40,6 +40,7 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -58,6 +59,8 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import android.widget.Toast
 import eu.kanade.tachiyomi.util.npu.NpuModelStatus
 import io.lumasr.app.AppViewModel
@@ -82,6 +85,10 @@ fun SettingsScreen(vm: AppViewModel) {
     val lastEngineError by Engine97.lastError.collectAsState()
     val clipboard = LocalClipboardManager.current
     val context = LocalContext.current
+    val exportPicker = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocumentTree(),
+    ) { uri -> if (uri != null) vm.setOutputTree(uri) }
+    val hasExportTree = config.outputTreeUri.isNotBlank()
     val npuError = npuStates.values
         .filterIsInstance<NpuModelStatus.Failed>()
         .lastOrNull()
@@ -232,14 +239,27 @@ fun SettingsScreen(vm: AppViewModel) {
                     SettingsCard {
                         SettingsRow(
                             icon = Icons.Rounded.Folder,
-                            title = "输出文件夹",
-                            subtitle = "源文件夹 / ${config.outputFolderName}",
+                            title = "导出文件夹",
+                            subtitle = if (hasExportTree) {
+                                "${
+                                    config.outputTreeName.ifBlank { "已指定目录" }
+                                } · 按源文件夹名建子目录"
+                            } else {
+                                "源文件夹 / ${config.outputFolderName}"
+                            },
+                            onClick = { exportPicker.launch(null) },
                         ) {
-                            Text(
-                                "默认",
-                                fontSize = 10.sp,
-                                color = MaterialTheme.colorScheme.secondary,
-                            )
+                            TextButton(
+                                onClick = {
+                                    if (hasExportTree) {
+                                        vm.clearOutputTree()
+                                    } else {
+                                        exportPicker.launch(null)
+                                    }
+                                },
+                            ) {
+                                Text(if (hasExportTree) "恢复默认" else "选择")
+                            }
                         }
                         SettingsRow(
                             icon = Icons.Rounded.Image,
@@ -378,7 +398,7 @@ fun SettingsScreen(vm: AppViewModel) {
                     Surface(
                         shape = RoundedCornerShape(18.dp),
                         color = MaterialTheme.colorScheme.surface,
-                        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.04f)),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.55f)),
                         modifier = Modifier.fillMaxWidth(),
                     ) {
                         Column(Modifier.padding(15.dp)) {
@@ -541,7 +561,7 @@ private fun SectionLabel(text: String) {
         text,
         fontSize = 12.sp,
         fontWeight = FontWeight.SemiBold,
-        color = Color(0xFFC8D3E4),
+        color = MaterialTheme.colorScheme.onSurface,
         modifier = Modifier.padding(bottom = 6.dp),
     )
 }
@@ -551,7 +571,7 @@ private fun SettingsCard(content: @Composable () -> Unit) {
     Surface(
         shape = RoundedCornerShape(18.dp),
         color = MaterialTheme.colorScheme.surface,
-        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.04f)),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.55f)),
         modifier = Modifier.fillMaxWidth(),
     ) {
         Column { content() }
@@ -603,7 +623,7 @@ private fun SettingsRow(
                 Modifier
                     .fillMaxWidth()
                     .height(1.dp)
-                    .background(Color.White.copy(alpha = 0.05f)),
+                    .background(MaterialTheme.colorScheme.surfaceVariant),
             )
         }
     }

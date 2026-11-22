@@ -32,6 +32,7 @@ import io.lumasr.app.ui.folder.GridSelectScreen
 import io.lumasr.app.ui.home.HomeScreen
 import io.lumasr.app.ui.models.ModelGuideScreen
 import io.lumasr.app.ui.perf.PerfLogScreen
+import io.lumasr.app.ui.preprocess.PreprocessScreen
 import io.lumasr.app.ui.processing.ProcessingScreen
 import io.lumasr.app.ui.settings.ModelsScreen
 import io.lumasr.app.ui.settings.SettingsScreen
@@ -55,6 +56,7 @@ fun AppRoot(vm: AppViewModel = viewModel()) {
             Dest.PerfLog -> vm.backFromPerfLog()
             is Dest.FolderOverview -> vm.backFromFolder()
             is Dest.Grid -> vm.backToOverview()
+            is Dest.Preprocess -> vm.backToGrid()
             is Dest.BatchConfig -> vm.backToGrid()
             is Dest.Configure -> vm.backHome()
             Dest.Processing -> vm.cancelProcessing()
@@ -89,6 +91,7 @@ fun AppRoot(vm: AppViewModel = viewModel()) {
             Dest.PerfLog -> PerfLogScreen(vm = vm)
             is Dest.FolderOverview -> FolderOverviewScreen(vm = vm)
             is Dest.Grid -> GridSelectScreen(vm = vm)
+            is Dest.Preprocess -> PreprocessScreen(vm = vm)
             is Dest.BatchConfig -> BatchConfigScreen(vm = vm)
             is Dest.Configure -> SingleConfigScreen(vm = vm, uris = dest.uris, batch = false)
             Dest.Processing -> ProcessingScreen(

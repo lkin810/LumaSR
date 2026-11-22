@@ -26,6 +26,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
@@ -47,34 +48,38 @@ fun LumaBackground(
     Box(
         modifier
             .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    listOf(Color(0xFF070A10), Color(0xFF0F1724), Color(0xFF070A10)),
-                ),
-            ),
+            .background(MaterialTheme.colorScheme.background),
         content = content,
     )
 }
 
 @Composable
 fun LumaBottomBar(current: AppTab, onSelect: (AppTab) -> Unit) {
-    Surface(color = Color(0xFF0B0F16).copy(alpha = 0.96f)) {
-        Row(
-            Modifier
-                .fillMaxWidth()
-                .navigationBarsPadding()
-                .height(62.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            TabItem(Icons.Rounded.Home, "首页", current == AppTab.HOME) {
-                onSelect(AppTab.HOME)
-            }
-            TabItem(Icons.Rounded.GridView, "任务", current == AppTab.TASKS) {
-                onSelect(AppTab.TASKS)
-            }
-            TabItem(Icons.Rounded.Settings, "设置", current == AppTab.SETTINGS) {
-                onSelect(AppTab.SETTINGS)
+    Surface(color = MaterialTheme.colorScheme.surface) {
+        Column(Modifier.navigationBarsPadding()) {
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .height(1.dp)
+                    .background(MaterialTheme.colorScheme.outline.copy(alpha = 0.6f)),
+            )
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .height(64.dp)
+                    .padding(horizontal = 14.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                TabItem(Icons.Rounded.Home, "首页", current == AppTab.HOME) {
+                    onSelect(AppTab.HOME)
+                }
+                TabItem(Icons.Rounded.GridView, "任务", current == AppTab.TASKS) {
+                    onSelect(AppTab.TASKS)
+                }
+                TabItem(Icons.Rounded.Settings, "设置", current == AppTab.SETTINGS) {
+                    onSelect(AppTab.SETTINGS)
+                }
             }
         }
     }
@@ -82,16 +87,29 @@ fun LumaBottomBar(current: AppTab, onSelect: (AppTab) -> Unit) {
 
 @Composable
 private fun TabItem(icon: ImageVector, label: String, selected: Boolean, onClick: () -> Unit) {
-    val tint = if (selected) MaterialTheme.colorScheme.primary else Color(0xFF6F7D91)
+    val tint = if (selected) {
+        MaterialTheme.colorScheme.primary
+    } else {
+        MaterialTheme.colorScheme.onSurfaceVariant
+    }
     Column(
         Modifier
+            .clip(RoundedCornerShape(14.dp))
+            .background(
+                if (selected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent,
+            )
             .clickable(onClick = onClick)
-            .padding(horizontal = 18.dp, vertical = 6.dp),
+            .padding(horizontal = 18.dp, vertical = 7.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(3.dp),
     ) {
-        Icon(icon, contentDescription = label, tint = tint, modifier = Modifier.size(21.dp))
-        Text(label, fontSize = 10.sp, color = tint, fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal)
+        Icon(icon, contentDescription = label, tint = tint, modifier = Modifier.size(22.dp))
+        Text(
+            label,
+            fontSize = 11.5.sp,
+            color = tint,
+            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
+        )
     }
 }
 
@@ -105,7 +123,7 @@ fun SectionTitle(text: String, trailing: String? = null) {
             text,
             style = MaterialTheme.typography.titleSmall,
             fontWeight = FontWeight.SemiBold,
-            color = Color(0xFFC8D3E4),
+            color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.weight(1f),
         )
         if (trailing != null) {
