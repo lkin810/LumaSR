@@ -15,8 +15,8 @@
 - **预处理分析**：开始前统计分辨率分布，采样估算清晰度，提前确认哪些直接复制、哪些需要超分
 - **超大图跳过**：长边达到 1080p / 2K / 4K 阈值时直接复制原图，不再超分
 - **两种加速方式**：GPU 支持全部模型；骁龙 NPU 支持部分模型，速度更快、更省电
-- **12 个模型家族、30+ 变体**：Real-CUGAN SE/Pro/Nose、Real-ESRGAN、Waifu2x、
-  W2xEX、AnimeJaNai、sudo、SPAN NomosUni
+- **9 个模型家族、20+ 变体**：Real-CUGAN SE/Pro/Nose、Real-ESRGAN、Waifu2x 与 Fast、
+  AnimeJaNai、sudo、SPAN NomosUni
 - **单图工作流**：选图 → 模型/倍数/降噪/后端/精度 → 推理 → 拖动对比 → 保存到相册
 - **任务与结果**：总进度、当前文件、逐项状态、暂停/继续/重试失败、结果预览
 - **锁屏继续**：批量处理会持有唤醒锁，锁屏后仍可继续（厂商电池管理可能仍需放行）
@@ -53,7 +53,6 @@
 - Real-CUGAN SE 2x（全部降噪档位）
 - Real-CUGAN Pro 2x / 3x
 - Real-ESRGAN 动漫 2x、照片 2x
-- W2xEX Photo Small 2x
 - SPAN NomosUni Photo 2x
 
 ## 模型
@@ -65,8 +64,6 @@
 | Real-CUGAN Nose | 2x | 无 | — |
 | Real-ESRGAN（动漫/照片） | 2/3/4x；照片 2x | — | 2x |
 | Waifu2x / Fast | 2x | 0-3 | — |
-| W2xEX Universal / Omni | 2x | — | — |
-| W2xEX Photo Small | 2x | — | 2x |
 | AnimeJaNai v2 UltraCompact | 2x | — | — |
 | sudo UltraCompact | 2x | — | — |
 | SPAN NomosUni Photo | 2x | — | 2x |
@@ -114,7 +111,7 @@ LumaSR/
 ├── app/                          # Compose UI、单图/文件夹批量/对比/保存
 │   └── src/main/java/io/lumasr/app/
 │       ├── engine/Engine97.kt    # 97 引擎门面（GPU/NPU 调度）
-│       ├── engine/EngineModels.kt# 12 个模型家族与 NPU 支持表
+│       ├── engine/EngineModels.kt# 9 个模型家族与 NPU 支持表
 │       ├── folder/               # SAF 扫描、输出文件夹、格式写入
 │       ├── ui/
 │       │   ├── home/             # 首页
@@ -161,7 +158,8 @@ LumaSR/
 - Real-ESRGAN / Real-ESRNet：BSD-3-Clause
 - Real-CUGAN：MIT
 - Waifu2x：MIT
-- W2xEX / AnimeJaNai / sudo / SPAN：遵循各自作者 / OpenModelDB 许可
-- Qualcomm QNN 运行时：Qualcomm 许可，随上游官方 APK 分发
+- AnimeJaNai / sudo：CC BY-NC-SA 4.0，仅限非商业使用
+- SPAN NomosUni：CC BY 4.0
+- Qualcomm QNN 运行时：Qualcomm 许可；本仓库不包含，需从 QAIRT SDK 获取
 
 完整第三方声明见 [NOTICE](NOTICE)，模型来源见 [docs/MODELS.md](docs/MODELS.md)。

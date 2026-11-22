@@ -128,9 +128,9 @@ private fun QuickPickCard() {
             Spacer(Modifier.height(10.dp))
             QuickLine("漫画 / 线稿", "Real-CUGAN SE 或 Pro")
             QuickLine("动漫插画", "Real-ESRGAN 或 Waifu2x")
-            QuickLine("真实照片", "SPAN 或 W2xEX Photo Small")
-            QuickLine("快速批量", "W2xEX Universal / AnimeJaNai")
-            QuickLine("想用 NPU", "SE 2x、Pro 2x/3x、ESRGAN 2x、Photo Small 2x、SPAN 2x")
+            QuickLine("真实照片", "SPAN NomosUni Photo")
+            QuickLine("快速批量", "AnimeJaNai / Waifu2x Fast")
+            QuickLine("想用 NPU", "SE 2x、Pro 2x/3x、ESRGAN 2x、SPAN 2x")
         }
     }
 }

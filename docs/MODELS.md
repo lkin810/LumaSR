@@ -14,9 +14,6 @@
 | Real-ESRGAN Photo | 2x 输出 | `realesrgan-models/v3-general` | xinntao/Real-ESRGAN |
 | Waifu2x | 2x, noise 0-3 | `waifu2x-models` | nagadomi/waifu2x |
 | Waifu2x Fast | 2x, noise 0-3 | `waifu2x-models-upconv7` | nagadomi/waifu2x |
-| W2xEX Universal Fast | 2x | `w2xex-esrgan/Universal-Fast-W2xEX` | AaronFeng753 |
-| W2xEX Omni Mini V2 | 2x | `w2xex-esrgan/Omni-MiniV2-W2xEX` | AaronFeng753 |
-| W2xEX Photo Small | 2x | `w2xex-esrgan/Photo-Small-W2xEX` | AaronFeng753 |
 | AnimeJaNai v2 UltraCompact | 2x | `animejanai-ncnn-vulkan/animejanai-v2-ultra-compact-x2` | the-database |
 | sudo UltraCompact | 2x | `sudo-ultracompact/2x-sudo-UltraCompact` | OpenModelDB |
 | SPAN NomosUni Photo | 2x | `span-nomosuni/2x-NomosUni-SPAN-multijpg-ldl` | Philip Hofmann |
@@ -38,7 +35,6 @@ Real-CUGAN Pro 只有 no-denoise / denoise3x / conservative。
 | realesrgan-animevideov3-x2 | FP16 |
 | realesrgan-general-x4v3-x2 | FP16 |
 | span-nomosuni-x2 | FP16 |
-| w2xex-photo-small-x2 | FP16 |
 | realesrgan-animevideov3-x2-w8a8 | INT8 W8A8 |
 
 首次使用某个 NPU 模型时，App 会把 DLC 编译成当前设备 HTP 的 context，
@@ -61,9 +57,10 @@ Real-CUGAN Pro 只有 no-denoise / denoise3x / conservative。
 - Real-ESRGAN / Real-ESRNet：BSD-3-Clause，Copyright (c) 2021 Xintao Wang
 - Real-CUGAN：MIT，Copyright (c) 2021 nihui
 - Waifu2x：MIT，Copyright (c) 2017 nagadomi
-- W2xEX / AnimeJaNai / sudo / SPAN：遵循各自 OpenModelDB / 作者许可
+- AnimeJaNai / sudo：CC BY-NC-SA 4.0，仅限非商业使用
+- SPAN NomosUni：CC BY 4.0
 - NCNN：BSD-3-Clause，Copyright (c) 2017 Tencent
 - Mihon Upscale 引擎：Apache-2.0
-- Qualcomm QNN 运行时：Qualcomm 许可，随官方 APK 分发
+- Qualcomm QNN 运行时：Qualcomm 许可，不随仓库分发
 
 APK 内保留了各模型的 `ATTRIBUTION.txt`。

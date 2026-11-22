@@ -33,9 +33,6 @@ object EngineModels {
     const val MODEL_NOSE = 3
     const val MODEL_WAIFU2X = 4
     const val MODEL_WAIFU2X_FAST = 5
-    const val MODEL_W2XEX_UNIVERSAL = 6
-    const val MODEL_W2XEX_OMNI = 8
-    const val MODEL_W2XEX_PHOTO_SMALL = 9
     const val MODEL_ANIMEJANAI = 16
     const val MODEL_SUDO = 18
     const val MODEL_SPAN = 19
@@ -98,20 +95,6 @@ object EngineModels {
             noises = listOf(0, 1, 2, 3),
         ),
         EngineModel(
-            id = MODEL_W2XEX_UNIVERSAL,
-            name = "W2xEX Universal Fast",
-            category = ModelCategory.ANIME,
-            description = "通用快速 2x，适合批量",
-            scales = listOf(2),
-        ),
-        EngineModel(
-            id = MODEL_W2XEX_OMNI,
-            name = "W2xEX Omni Mini V2",
-            category = ModelCategory.ANIME,
-            description = "更均衡的通用 2x",
-            scales = listOf(2),
-        ),
-        EngineModel(
             id = MODEL_ANIMEJANAI,
             name = "AnimeJaNai v2 UltraCompact",
             category = ModelCategory.ANIME,
@@ -124,14 +107,6 @@ object EngineModels {
             category = ModelCategory.ANIME,
             description = "超紧凑 2x，适合小图",
             scales = listOf(2),
-        ),
-        EngineModel(
-            id = MODEL_W2XEX_PHOTO_SMALL,
-            name = "W2xEX Photo Small",
-            category = ModelCategory.PHOTO,
-            description = "照片 2x，小体积，支持 NPU",
-            scales = listOf(2),
-            npuScales = listOf(2),
         ),
         EngineModel(
             id = MODEL_SPAN,
@@ -179,9 +154,6 @@ object EngineModels {
         MODEL_NOSE -> "cugan-nose"
         MODEL_WAIFU2X -> "waifu2x"
         MODEL_WAIFU2X_FAST -> "waifu2x-fast"
-        MODEL_W2XEX_UNIVERSAL -> "w2xex-universal"
-        MODEL_W2XEX_OMNI -> "w2xex-omni"
-        MODEL_W2XEX_PHOTO_SMALL -> "w2xex-photo"
         MODEL_ANIMEJANAI -> "animejanai"
         MODEL_SUDO -> "sudo"
         MODEL_SPAN -> "span"

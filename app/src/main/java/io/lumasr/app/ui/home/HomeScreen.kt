@@ -339,7 +339,7 @@ private fun DeviceCard(vm: AppViewModel) {
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Text(
-                    "12 个模型 · 本地推理",
+                    "9 个模型 · 本地推理",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

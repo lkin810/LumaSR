@@ -29,12 +29,14 @@ Models and native libraries
   Real-ESRGAN / Real-ESRNet BSD-3-Clause, Copyright (c) 2021 Xintao Wang
   Real-CUGAN                MIT, Copyright (c) 2021 nihui
   Waifu2x                   MIT, Copyright (c) 2017 nagadomi
-  W2xEX / AnimeJaNai / sudo / SPAN
+  AnimeJaNai / sudo / SPAN
                             Distributed under their respective author and
-                            OpenModelDB licenses.
+                            OpenModelDB licenses. AnimeJaNai and sudo are
+                            CC BY-NC-SA 4.0 (non-commercial use only);
+                            SPAN NomosUni is CC BY 4.0.
 
-  Qualcomm QNN runtime libraries (libQnn*.so) are distributed under
-  Qualcomm's license, as bundled with the upstream project / official APK.
+  Qualcomm QNN runtime libraries are not included in this repository.
+  Obtain them from the Qualcomm QAIRT SDK under Qualcomm's license.
 
 --------------------------------------------------------------------------
 Modifications in this repository

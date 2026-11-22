@@ -119,7 +119,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         setOf(
             EngineModels.MODEL_CUGAN_SE,
             EngineModels.MODEL_ESRGAN,
-            EngineModels.MODEL_W2XEX_PHOTO_SMALL,
+            EngineModels.MODEL_SPAN,
         ),
     )
         private set

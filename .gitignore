@@ -17,3 +17,4 @@ captures/
 # Obtain them from the QAIRT 2.49.0 SDK and place them locally to build the NPU variant.
 engine97/src/main/jniLibs/arm64-v8a/libQnn*.so
 engine97/src/main/assets/qnn-models/
+engine97/src/main/assets/w2xex-esrgan/

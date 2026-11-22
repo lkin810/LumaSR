@@ -495,7 +495,7 @@ fun SettingsScreen(vm: AppViewModel) {
                         SettingsRow(
                             icon = Icons.Rounded.AutoAwesome,
                             title = "模型管理",
-                            subtitle = "12 个家族 · NPU 模型按设备编译缓存",
+                            subtitle = "9 个家族 · NPU 模型按设备编译缓存",
                             onClick = vm::openModels,
                             showDivider = false,
                         ) {
