@@ -1,5 +1,9 @@
 # LumaSR · 光影超分
 
+<p align="center">
+  <img src="docs/images/banner.png" alt="LumaSR · 光影超分 — 文件夹批量、本地 AI 超分" width="100%">
+</p>
+
 基于 [HaoweiLi97/mihon_img_upscale](https://github.com/HaoweiLi97/mihon_img_upscale)（Mihon Upscale v1.3.23）的图像增强引擎，
 重做的**独立本地图片超分 App**。支持 GPU 和高通骁龙 NPU 两种加速方式，
 界面采用**文件夹优先**的批处理流程。
